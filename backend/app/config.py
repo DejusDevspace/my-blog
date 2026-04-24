@@ -13,10 +13,10 @@ class Settings(BaseSettings):
     )
 
     # --- Database ---
-    database_url: str
+    DATABASE_URL: str
 
     # --- Auth ---
-    nextauth_secret: str
+    NEXTAUTH_SECRET: str
 
     # --- Application ---
     environment: str = "development"

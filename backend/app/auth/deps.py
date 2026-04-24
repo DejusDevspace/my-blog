@@ -33,7 +33,7 @@ async def get_current_admin(
     try:
         payload = jwt.decode(
             token,
-            settings.nextauth_secret,
+            settings.NEXTAUTH_SECRET,
             algorithms=["HS256"],
         )
     except jwt.ExpiredSignatureError:

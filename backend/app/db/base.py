@@ -26,7 +26,7 @@ NAMING_CONVENTION: dict[str, str] = {
 }
 
 engine = create_async_engine(
-    settings.database_url,
+    settings.DATABASE_URL,
     echo=not settings.is_production,
     pool_pre_ping=True,
 )

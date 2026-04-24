@@ -29,7 +29,7 @@ def main() -> None:
         "exp": datetime.now(timezone.utc) + timedelta(hours=EXPIRY_HOURS),
     }
 
-    token = jwt.encode(payload, settings.nextauth_secret, algorithm="HS256")
+    token = jwt.encode(payload, settings.NEXTAUTH_SECRET, algorithm="HS256")
 
     print("\n--- d3jusdevspace Test JWT ---")
     print(f"Email:   {payload['email']}")
