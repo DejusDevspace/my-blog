@@ -16,4 +16,5 @@ dependencies = [
     "pyjwt[crypto]>=2.9.0",
     # Utilities
     "python-slugify>=8.0.4",
+    "psycopg[binary]>=3.3.3",
 ]
