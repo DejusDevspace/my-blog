@@ -1,0 +1,56 @@
+/* ============================================================================
+  LoadingSpinner — scoped styles
+  Uses keyframes from globals.css (spinner-orbit, skeleton-pulse)
+============================================================================ */
+
+.wrapper {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--space-4);
+}
+
+.fullPage {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	background-color: var(--color-bg-page);
+}
+
+.spinner {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* ── Orbit Ring ── */
+
+.ring {
+	width: 100%;
+	height: 100%;
+	animation: spinner-orbit 1s linear infinite;
+}
+
+.track {
+	stroke: var(--color-border-subtle);
+}
+
+.arc {
+	stroke: var(--color-accent);
+	filter: drop-shadow(0 0 4px var(--color-accent));
+}
+
+/* ── Centre Dot ── */
+
+.dot {
+	position: absolute;
+	width: 20%;
+	height: 20%;
+	border-radius: 9999px;
+	background-color: var(--color-accent);
+	box-shadow:
+		0 0 6px var(--color-accent),
+		0 0 12px var(--color-accent);
+	animation: skeleton-pulse 1.2s ease-in-out infinite;
+}

@@ -5,5 +5,5 @@
  * live in this directory and are re-exported from here.
  */
 
-// Components will be exported as they are created.
-// e.g. export { default as Button } from "./Button";
+export { default as LoadingSpinner } from "./LoadingSpinner";
+export type { SpinnerSize } from "./LoadingSpinner";

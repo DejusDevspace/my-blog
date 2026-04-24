@@ -487,6 +487,65 @@ body {
 	}
 }
 
+@keyframes spinner-orbit {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes glitch-shift {
+	0%,
+	100% {
+		transform: translate(0);
+	}
+	20% {
+		transform: translate(-2px, 2px);
+	}
+	40% {
+		transform: translate(2px, -2px);
+	}
+	60% {
+		transform: translate(-1px, -1px);
+	}
+	80% {
+		transform: translate(1px, 1px);
+	}
+}
+
+@keyframes glitch-clip {
+	0% {
+		clip-path: inset(40% 0 61% 0);
+	}
+	20% {
+		clip-path: inset(92% 0 1% 0);
+	}
+	40% {
+		clip-path: inset(43% 0 1% 0);
+	}
+	60% {
+		clip-path: inset(25% 0 58% 0);
+	}
+	80% {
+		clip-path: inset(54% 0 7% 0);
+	}
+	100% {
+		clip-path: inset(58% 0 43% 0);
+	}
+}
+
+@keyframes terminal-blink {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0;
+	}
+}
+
 .skeleton {
 	background: var(--color-bg-subtle);
 	border-radius: var(--radius-md);
