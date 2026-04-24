@@ -3,7 +3,7 @@
 import uuid
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Text
+from sqlalchemy import ForeignKey, Text, text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -23,7 +23,7 @@ class UserContext(Base):
         JSONB,
         nullable=False,
         default=list,
-        server_default="'[]'::jsonb",
+        server_default=text("'[]'"),
     )
     tone_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
