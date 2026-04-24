@@ -1,0 +1,86 @@
+"""Admin post management endpoints — authentication required."""
+
+import math
+import uuid
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.auth.deps import get_current_admin
+from app.db.base import get_db
+from app.models.owner import Owner
+from app.schemas.common import MessageResponse, PaginatedResponse
+from app.schemas.post import PostCreate, PostListItem, PostResponse, PostUpdate
+from app.services import post_service
+
+router = APIRouter(
+    prefix="/admin/posts",
+    tags=["Posts (Admin)"],
+    dependencies=[Depends(get_current_admin)],
+)
+
+
+@router.get("", response_model=PaginatedResponse[PostListItem])
+async def list_all_posts(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    status_filter: str | None = Query(
+        None,
+        alias="status",
+        description="Filter by status: draft, published, archived, agent_draft",
+    ),
+    page: int = Query(1, ge=1),
+    limit: int = Query(20, ge=1, le=100),
+):
+    """List all posts (all statuses) for admin management."""
+    posts, total = await post_service.list_all_posts(
+        db, status_filter=status_filter, page=page, limit=limit
+    )
+    return PaginatedResponse(
+        items=posts,
+        total=total,
+        page=page,
+        limit=limit,
+        pages=math.ceil(total / limit) if total > 0 else 0,
+    )
+
+
+@router.post("", response_model=PostResponse, status_code=201)
+async def create_post(
+    data: PostCreate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+    admin: Annotated[Owner, Depends(get_current_admin)],
+):
+    """Create a new post."""
+    return await post_service.create_post(db, data, admin.id)
+
+
+@router.patch("/{post_id}", response_model=PostResponse)
+async def update_post(
+    post_id: uuid.UUID,
+    data: PostUpdate,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Update an existing post."""
+    post = await post_service.update_post(db, post_id, data)
+    if post is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found.",
+        )
+    return post
+
+
+@router.delete("/{post_id}", response_model=MessageResponse)
+async def delete_post(
+    post_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Soft-delete a post (sets ``deleted_at``)."""
+    post = await post_service.soft_delete_post(db, post_id)
+    if post is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found.",
+        )
+    return MessageResponse(detail="Post deleted.")
