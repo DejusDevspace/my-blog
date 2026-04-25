@@ -74,7 +74,7 @@ apiClient.interceptors.response.use(
       localStorage.removeItem("d3jusdevspace_token");
       // Don't redirect if already on a public page
       if (window.location.pathname.startsWith("/admin")) {
-        window.location.href = "/login";
+        window.location.href = "/admin/login";
       }
     }
 
