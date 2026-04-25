@@ -56,6 +56,17 @@
 	--spacing-18: 4.5rem; /* 72px */
 	--spacing-22: 5.5rem; /* 88px */
 
+	/* ── Type Scale ── */
+	--text-display: 2.5rem;
+	--text-h1: 2rem;
+	--text-h2: 1.5rem;
+	--text-h3: 1.25rem;
+	--text-h4: 1.125rem;
+	--text-body-lg: 1.125rem;
+	--text-body: 1rem;
+	--text-body-sm: 0.9375rem;
+	--text-caption: 0.875rem;
+
 	/* ── Border Radius ── */
 	--radius-sm: 4px;
 	--radius-md: 8px;

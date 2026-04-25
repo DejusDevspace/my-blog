@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
 						<h3 className="m-0 font-mono text-[0.65rem] font-bold uppercase tracking-widest text-text-tertiary">
 							Total Posts
 						</h3>
-						<div className="font-display text-(length:(--text-h2)) font-bold text-text-primary">
+						<div className="font-display text-h2 font-bold text-text-primary">
 							{totalPosts}
 						</div>
 					</div>
@@ -79,7 +79,7 @@ export default function AdminDashboardPage() {
 						<h3 className="m-0 font-mono text-[0.65rem] font-bold uppercase tracking-widest text-text-tertiary">
 							Published
 						</h3>
-						<div className="font-display text-(length:(--text-h2)) font-bold text-text-primary">
+						<div className="font-display text-h2 font-bold text-text-primary">
 							{publishedCount}
 						</div>
 					</div>
@@ -94,7 +94,7 @@ export default function AdminDashboardPage() {
 						<h3 className="m-0 font-mono text-[0.65rem] font-bold uppercase tracking-widest text-text-tertiary">
 							Drafts
 						</h3>
-						<div className="font-display text-(length:--text-h2) font-bold text-text-primary">
+						<div className="font-display text-h2 font-bold text-text-primary">
 							{draftCount}
 						</div>
 					</div>
