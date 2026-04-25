@@ -12,6 +12,7 @@ import {
 	Eye,
 	Plus,
 	X,
+	Sparkles,
 } from "lucide-react";
 import { useAdminCategories } from "@/hooks/useApi";
 import type { PostStatus } from "@/types";
@@ -191,7 +192,7 @@ export default function PostEditorClient({
 	return (
 		<div className="flex h-[calc(100vh-var(--admin-topbar))] flex-col bg-bg-page">
 			{/* TOP BAR */}
-			<header className="sticky top-0 z-30 flex h-[56px] shrink-0 items-center justify-between border-b border-border-subtle bg-bg-surface px-4 lg:px-6">
+			<header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between border-b border-border-subtle bg-bg-surface px-4 lg:px-6">
 				<div className="flex items-center gap-4">
 					<Link
 						href="/admin"
@@ -259,7 +260,7 @@ export default function PostEditorClient({
 			<div className="relative flex flex-1 overflow-hidden">
 				{/* EDITOR COLUMN */}
 				<div className="flex-1 overflow-y-auto px-4 py-10 lg:px-20">
-					<div className="mx-auto max-w-[var(--content-max)]">
+					<div className="mx-auto max-w-(--content-max)">
 						{/* Post Title Input */}
 						<input
 							type="text"
@@ -270,7 +271,7 @@ export default function PostEditorClient({
 						/>
 
 						{/* BlockNote */}
-						<div className="min-h-[500px]">
+						<div className="min-h-125">
 							<BlockNoteEditor
 								initialMarkdown={initialData.content}
 								onChange={(markdown) => handleChange("content", markdown)}
@@ -281,7 +282,7 @@ export default function PostEditorClient({
 
 				{/* SIDEBAR (Settings Panel) */}
 				<aside
-					className={`absolute right-0 top-0 z-20 h-full w-[280px] shrink-0 border-l border-border-subtle bg-bg-surface p-5 transition-transform duration-300 lg:relative lg:translate-x-0 ${
+					className={`absolute right-0 top-0 z-20 h-full w-70 shrink-0 border-l border-border-subtle bg-bg-surface p-5 transition-transform duration-300 lg:relative lg:translate-x-0 ${
 						sidebarOpen
 							? "translate-x-0 shadow-lg"
 							: "translate-x-full shadow-none"
@@ -332,7 +333,7 @@ export default function PostEditorClient({
 								Category
 							</label>
 							<select
-								className="input h-10 w-full cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5YWEzYjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=')] bg-[length:16px] bg-[position:right_12px_center] bg-no-repeat pr-10"
+								className="input h-10 w-full cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5YWEzYjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=')] bg-size-16px bg-position[right_12px_center] bg-no-repeat pr-10"
 								value={data.category_id}
 								onChange={(e) => handleChange("category_id", e.target.value)}
 							>
