@@ -149,6 +149,18 @@ async def list_all_posts(
     return posts, total
 
 
+async def get_admin_post_by_id(
+	db: AsyncSession,
+	post_id: uuid.UUID,
+) -> Post | None:
+	"""Admin view — fetch a single post by ID (any status)."""
+	result = await db.execute(
+		select(Post).where(Post.id == post_id, Post.deleted_at.is_(None))
+	)
+	post = result.scalar_one_or_none()
+	return post
+
+
 async def create_post(
     db: AsyncSession,
     data: PostCreate,
