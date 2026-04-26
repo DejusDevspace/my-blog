@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import PostEditorClient from "@/components/editor/PostEditorClient";
-import { usePost, useAdminUpdatePost } from "@/hooks/useApi";
+import { useAdminPost, useAdminUpdatePost } from "@/hooks/useApi";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function EditPostPage() {
@@ -10,12 +10,7 @@ export default function EditPostPage() {
 	const router = useRouter();
 	const postId = params.id as string;
 
-	// In the real app, we should ideally fetch the post by ID for admin,
-	// but currently `usePost` fetches by slug.
-	// Wait, we need an admin fetch by ID endpoint. If it doesn't exist, we might have to use the slug,
-	// but the route uses `[id]`. Let's assume `usePost` handles ID if slug is passed,
-	// or we use it as is for now until the backend endpoint is verified.
-	const { data: post, isLoading, error } = usePost(postId);
+	const { data: post, isLoading, error } = useAdminPost(postId);
 	const updatePostMutation = useAdminUpdatePost();
 
 	if (isLoading) {

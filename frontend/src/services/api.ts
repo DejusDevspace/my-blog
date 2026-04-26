@@ -90,6 +90,12 @@ export async function adminListPosts(
   return data;
 }
 
+/** (Admin) Fetch a single post by ID. */
+export async function adminGetPostById(postId: string): Promise<Post> {
+  const { data } = await apiClient.get<Post>(`/admin/posts/${postId}`);
+  return data;
+}
+
 /** (Admin) Create a new post. */
 export async function adminCreatePost(
   payload: PostCreate,

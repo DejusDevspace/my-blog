@@ -45,6 +45,7 @@ export const queryKeys = {
       all: ["admin", "posts"] as const,
       list: (params?: AdminListPostsParams) =>
         ["admin", "posts", "list", params] as const,
+      detail: (id: string) => ["admin", "posts", "detail", id] as const,
     },
     categories: {
       all: ["admin", "categories"] as const,
@@ -131,6 +132,19 @@ export function useAdminPosts(
   return useQuery<PaginatedResponse<PostListItem>, ApiError>({
     queryKey: queryKeys.admin.posts.list(params),
     queryFn: () => api.adminListPosts(params),
+    ...options,
+  });
+}
+
+/** (Admin) Fetch a single post by ID. */
+export function useAdminPost(
+  postId: string,
+  options?: Partial<UseQueryOptions<Post, ApiError>>,
+) {
+  return useQuery<Post, ApiError>({
+    queryKey: queryKeys.admin.posts.detail(postId),
+    queryFn: () => api.adminGetPostById(postId),
+    enabled: !!postId,
     ...options,
   });
 }
