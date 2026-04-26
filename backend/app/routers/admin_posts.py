@@ -45,6 +45,21 @@ async def list_all_posts(
     )
 
 
+@router.get("/{post_id}", response_model=PostResponse)
+async def get_admin_post(
+    post_id: uuid.UUID,
+    db: Annotated[AsyncSession, Depends(get_db)],
+):
+    """Get a single post by ID (for admin editing, ignores status)."""
+    post = await post_service.get_admin_post_by_id(db, post_id)
+    if post is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Post not found.",
+        )
+    return post
+
+
 @router.post("", response_model=PostResponse, status_code=201)
 async def create_post(
     data: PostCreate,
