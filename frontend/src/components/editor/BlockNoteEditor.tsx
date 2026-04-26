@@ -1,13 +1,95 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState } from "react";
 import { BlockNoteEditor as BlockNoteEditorType } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
-import { BlockNoteView } from "@blocknote/mantine";
+import {
+	BlockNoteView,
+	darkDefaultTheme,
+	lightDefaultTheme,
+	Theme,
+} from "@blocknote/mantine";
+import { useTheme } from "next-themes";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
 
-// TODO: Refactor to use a more flexible theme system (custom theming)
+const cyberDarkTheme: Theme = {
+	...darkDefaultTheme,
+	colors: {
+		...darkDefaultTheme.colors,
+		editor: {
+			text: "var(--color-text-primary)",
+			background: "transparent",
+		},
+		menu: {
+			text: "var(--color-text-primary)",
+			background: "var(--color-bg-elevated)",
+		},
+		tooltip: {
+			text: "var(--color-text-primary)",
+			background: "var(--color-bg-elevated)",
+		},
+		hovered: {
+			text: "var(--color-text-primary)",
+			background: "var(--color-bg-surface)",
+		},
+		selected: {
+			text: "var(--color-text-primary)",
+			background: "var(--color-accent-muted)",
+		},
+		disabled: {
+			text: "var(--color-text-tertiary)",
+			background: "var(--color-bg-elevated)",
+		},
+		shadow: "var(--shadow-lg)",
+		border: "var(--color-border-subtle)",
+		sideMenu: "var(--color-text-secondary)",
+	},
+	borderRadius: 6,
+	fontFamily: "var(--font-body)",
+};
+
+const cyberLightTheme: Theme = {
+	...lightDefaultTheme,
+	colors: {
+		...lightDefaultTheme.colors,
+		editor: {
+			text: "var(--color-text-primary)",
+			background: "transparent",
+		},
+		menu: {
+			text: "var(--color-text-primary)",
+			background: "var(--color-bg-elevated)",
+		},
+		tooltip: {
+			text: "var(--color-text-primary)",
+			background: "var(--color-bg-elevated)",
+		},
+		hovered: {
+			text: "var(--color-text-primary)",
+			background: "var(--color-bg-surface)",
+		},
+		selected: {
+			text: "var(--color-text-primary)",
+			background: "var(--color-accent-muted)",
+		},
+		disabled: {
+			text: "var(--color-text-tertiary)",
+			background: "var(--color-bg-elevated)",
+		},
+		shadow: "var(--shadow-lg)",
+		border: "var(--color-border-subtle)",
+		sideMenu: "var(--color-text-secondary)",
+	},
+	borderRadius: 6,
+	fontFamily: "var(--font-body)",
+};
+
+const cyberTheme = {
+	light: cyberLightTheme,
+	dark: cyberDarkTheme,
+};
+
 interface BlockNoteEditorProps {
 	initialMarkdown?: string;
 	onChange: (markdown: string) => void;
@@ -34,6 +116,8 @@ export default function BlockNoteEditor({
 	const editor = useCreateBlockNote({
 		uploadFile: handleUpload,
 	});
+
+	const { resolvedTheme } = useTheme();
 
 	// Load initial markdown into the editor.
 	useEffect(() => {
@@ -72,7 +156,7 @@ export default function BlockNoteEditor({
 				editor={editor}
 				editable={editable}
 				onChange={handleChange}
-				theme="dark" // We will use 'dark' for the cyberpunk aesthetic, but BlockNote supports theming.
+				theme={resolvedTheme === "light" ? cyberLightTheme : cyberDarkTheme}
 				className="min-h-full"
 			/>
 		</div>
