@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { Lock, AtSign, Key, Eye, EyeOff, ArrowRight } from "lucide-react";
 
 export default function AdminLoginPage() {
@@ -11,20 +12,27 @@ export default function AdminLoginPage() {
 	const [showPassword, setShowPassword] = useState(false);
 	const [error, setError] = useState("");
 
-	const handleLogin = (e: React.FormEvent) => {
+	const handleLogin = async (e: React.SubmitEvent) => {
 		e.preventDefault();
 		setError("");
 
-		// TODO: Implement actual backend authentication here
 		if (!email || !password) {
-			setError("Please enter both email and passkey.");
+			setError("Please enter both email and password.");
 			return;
 		}
 
-		// Mock authentication logic
-		// We'll set a dummy token for now so the UI can proceed to /admin
-		localStorage.setItem("d3jusdevspace_token", "dummy_token_for_now");
-		router.push("/admin");
+		const result = await signIn("credentials", {
+			redirect: false,
+			email,
+			password,
+		});
+
+		if (result?.error) {
+			setError("Invalid credentials. Access denied.");
+		} else {
+			router.push("/admin");
+			router.refresh(); // Refresh to trigger server-side layout protection check
+		}
 	};
 
 	return (

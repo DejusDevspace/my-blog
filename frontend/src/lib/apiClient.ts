@@ -13,6 +13,7 @@ import axios, {
   type InternalAxiosRequestConfig,
 } from "axios";
 import type { ApiError } from "@/types";
+import { getSession, signOut } from "next-auth/react";
 
 /* ============================================================================
   Configuration
@@ -33,20 +34,18 @@ const apiClient: AxiosInstance = axios.create({
   },
 });
 
+
 /* ============================================================================
   Request Interceptor — attach Authorization token
 ============================================================================ */
 
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    // In a browser context, retrieve the token from wherever NextAuth stores
-    // it (e.g. a cookie decoded via `getSession()`, or localStorage for dev).
-    // For now we check localStorage — this will be replaced by NextAuth
-    // session handling once auth screens are implemented.
+  async (config: InternalAxiosRequestConfig) => {
+    // Retrieve the NextAuth session which contains our custom HS256 accessToken
     if (typeof window !== "undefined") {
-      const token = localStorage.getItem("d3jusdevspace_token");
-      if (token && config.headers) {
-        config.headers.Authorization = `Bearer ${token}`;
+      const session = await getSession();
+      if (session?.accessToken && config.headers) {
+        config.headers.Authorization = `Bearer ${session.accessToken}`;
       }
     }
     return config;
@@ -69,12 +68,11 @@ apiClient.interceptors.response.use(
       status: error.response?.status ?? 500,
     };
 
-    // Handle 401 globally — clear stale token & redirect to login
+    // Handle 401 globally — clear NextAuth session & redirect to login
     if (apiError.status === 401 && typeof window !== "undefined") {
-      localStorage.removeItem("d3jusdevspace_token");
       // Don't redirect if already on a public page
       if (window.location.pathname.startsWith("/admin")) {
-        window.location.href = "/admin/login";
+        signOut({ callbackUrl: "/admin/login" });
       }
     }
 

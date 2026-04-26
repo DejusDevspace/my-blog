@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import {
 	Menu,
 	X,
@@ -65,17 +66,8 @@ export default function AdminShell({
 	const router = useRouter();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-	// Client-side auth protection
-	useEffect(() => {
-		const token = localStorage.getItem("d3jusdevspace_token");
-		if (!token) {
-			router.push("/admin/login");
-		}
-	}, [router]);
-
 	const handleLogout = () => {
-		localStorage.removeItem("d3jusdevspace_token");
-		router.push("/admin/login");
+		signOut({ callbackUrl: "/admin/login" });
 	};
 
 	return (
