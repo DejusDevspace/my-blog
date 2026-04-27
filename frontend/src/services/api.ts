@@ -1,0 +1,194 @@
+/**
+ * d3jusdevspace — API Service Layer
+ *
+ * All backend calls are defined here as thin wrappers around the API client.
+ * Components should never call `apiClient` directly — use these functions
+ * or the React Query hooks that wrap them.
+ */
+
+import apiClient from "@/lib/apiClient";
+import type {
+  Category,
+  CategoryCreate,
+  CategoryUpdate,
+  Comment,
+  CommentCreate,
+  MessageResponse,
+  PaginatedResponse,
+  Post,
+  PostCreate,
+  PostListItem,
+  PostUpdate,
+} from "@/types";
+
+/* ============================================================================
+  Public — Posts
+============================================================================ */
+
+export interface ListPostsParams {
+  category?: string;
+  tag?: string;
+  page?: number;
+  limit?: number;
+}
+
+/** Fetch paginated published posts with optional category/tag filters. */
+export async function listPublishedPosts(
+  params: ListPostsParams = {},
+): Promise<PaginatedResponse<PostListItem>> {
+  const { data } = await apiClient.get<PaginatedResponse<PostListItem>>(
+    "/posts",
+    { params },
+  );
+  return data;
+}
+
+/** Fetch a single published post by slug. */
+export async function getPostBySlug(slug: string): Promise<Post> {
+  const { data } = await apiClient.get<Post>(`/posts/${slug}`);
+  return data;
+}
+
+/* ============================================================================
+  Public — Comments
+============================================================================ */
+
+/** Fetch approved comments for a published post (by slug). */
+export async function getPostComments(slug: string): Promise<Comment[]> {
+  const { data } = await apiClient.get<Comment[]>(
+    `/posts/${slug}/comments`,
+  );
+  return data;
+}
+
+/** Submit a new comment on a post. */
+export async function submitComment(
+  payload: CommentCreate,
+): Promise<Comment> {
+  const { data } = await apiClient.post<Comment>("/comments", payload);
+  return data;
+}
+
+/* ============================================================================
+  Admin — Posts
+============================================================================ */
+
+export interface AdminListPostsParams {
+  status?: string;
+  page?: number;
+  limit?: number;
+}
+
+/** (Admin) List all posts with optional status filter. */
+export async function adminListPosts(
+  params: AdminListPostsParams = {},
+): Promise<PaginatedResponse<PostListItem>> {
+  const { data } = await apiClient.get<PaginatedResponse<PostListItem>>(
+    "/admin/posts",
+    { params },
+  );
+  return data;
+}
+
+/** (Admin) Fetch a single post by ID. */
+export async function adminGetPostById(postId: string): Promise<Post> {
+  const { data } = await apiClient.get<Post>(`/admin/posts/${postId}`);
+  return data;
+}
+
+/** (Admin) Create a new post. */
+export async function adminCreatePost(
+  payload: PostCreate,
+): Promise<Post> {
+  const { data } = await apiClient.post<Post>("/admin/posts", payload);
+  return data;
+}
+
+/** (Admin) Update an existing post. */
+export async function adminUpdatePost(
+  postId: string,
+  payload: PostUpdate,
+): Promise<Post> {
+  const { data } = await apiClient.patch<Post>(
+    `/admin/posts/${postId}`,
+    payload,
+  );
+  return data;
+}
+
+/** (Admin) Soft-delete a post. */
+export async function adminDeletePost(
+  postId: string,
+): Promise<MessageResponse> {
+  const { data } = await apiClient.delete<MessageResponse>(
+    `/admin/posts/${postId}`,
+  );
+  return data;
+}
+
+/* ============================================================================
+  Admin — Categories
+============================================================================ */
+
+/** (Admin) List all categories. */
+export async function adminListCategories(): Promise<Category[]> {
+  const { data } = await apiClient.get<Category[]>("/admin/categories");
+  return data;
+}
+
+/** (Admin) Create a new category. */
+export async function adminCreateCategory(
+  payload: CategoryCreate,
+): Promise<Category> {
+  const { data } = await apiClient.post<Category>(
+    "/admin/categories",
+    payload,
+  );
+  return data;
+}
+
+/** (Admin) Update a category. */
+export async function adminUpdateCategory(
+  categoryId: string,
+  payload: CategoryUpdate,
+): Promise<Category> {
+  const { data } = await apiClient.patch<Category>(
+    `/admin/categories/${categoryId}`,
+    payload,
+  );
+  return data;
+}
+
+/** (Admin) Delete a category. */
+export async function adminDeleteCategory(
+  categoryId: string,
+): Promise<MessageResponse> {
+  const { data } = await apiClient.delete<MessageResponse>(
+    `/admin/categories/${categoryId}`,
+  );
+  return data;
+}
+
+/* ============================================================================
+  Admin — Comments
+============================================================================ */
+
+/** (Admin) Delete a comment. */
+export async function adminDeleteComment(
+  commentId: string,
+): Promise<MessageResponse> {
+  const { data } = await apiClient.delete<MessageResponse>(
+    `/admin/comments/${commentId}`,
+  );
+  return data;
+}
+
+/* ============================================================================
+  Health
+============================================================================ */
+
+/** Check backend health. */
+export async function healthCheck(): Promise<{ status: string }> {
+  const { data } = await apiClient.get<{ status: string }>("/health");
+  return data;
+}
