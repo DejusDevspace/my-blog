@@ -67,7 +67,7 @@ export default function PublicNavbar() {
 					</button>
 
 					<a
-						href="https://github.com/d3jus"
+						href="https://github.com/DejusDevspace"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="hidden md:inline-flex rounded border border-border-default px-3 py-1.5 font-mono text-sm text-accent hover:border-accent hover:bg-accent-muted transition-colors"

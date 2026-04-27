@@ -37,7 +37,7 @@ export default function FilterSidebar({
 	});
 
 	return (
-		<aside className="flex flex-col gap-8 w-full md:w-60 shrink-0 border-r border-border-subtle pr-6">
+		<aside className="hidden lg:flex flex-col gap-8 w-60 shrink-0 border-r border-border-subtle pr-6">
 			{/* Categories */}
 			<div>
 				<h3 className="mb-4 font-mono text-xs uppercase tracking-wider text-text-tertiary">
@@ -60,7 +60,7 @@ export default function FilterSidebar({
 						<li key={cat.id}>
 							<button
 								onClick={() => onCategoryChange(cat.slug)}
-								className={`w-full text-left px-3 py-2 text-sm font-medium transition-colors ${
+								className={`w-full text-left px-3 py-2 text-sm cursor-pointer font-medium transition-colors ${
 									activeCategory === cat.slug
 										? "bg-accent-muted text-accent border-l-2 border-accent"
 										: "text-text-secondary hover:text-text-primary border-l-2 border-transparent"
@@ -103,7 +103,7 @@ export default function FilterSidebar({
 				</div>
 			)}
 
-			{/* Trending Tags */}
+			{/* Trending Tags — commented out for customization later
 			<div>
 				<h3 className="mb-4 font-mono text-xs uppercase tracking-wider text-text-tertiary">
 					Trending Tags
@@ -126,6 +126,7 @@ export default function FilterSidebar({
 					))}
 				</div>
 			</div>
+			*/}
 
 			{/* Profile Widget */}
 			<div className="mt-auto pt-8 border-t border-border-subtle flex items-center gap-3">
@@ -138,7 +139,7 @@ export default function FilterSidebar({
 				</div>
 				<div className="flex flex-col">
 					<span className="font-mono text-sm font-bold text-text-primary">
-						d3jus
+						d3ju
 					</span>
 					<span className="font-mono text-[0.65rem] font-bold text-accent uppercase tracking-wider">
 						AI/ML ENGINEER
