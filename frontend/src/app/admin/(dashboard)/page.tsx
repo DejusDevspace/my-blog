@@ -14,6 +14,8 @@ import {
 	ChevronLeft,
 	ChevronRight,
 	Plus,
+	EyeIcon,
+	TrashIcon,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -126,7 +128,7 @@ export default function AdminDashboardPage() {
 						</h2>
 						<Link
 							href="/admin/posts/new"
-							className="flex items-center gap-2 rounded-md border border-accent-border bg-accent-muted px-3 py-1.5 font-mono text-xs font-medium text-accent transition-colors hover:bg-accent hover:text-bg-base"
+							className="flex items-center gap-2 rounded-md border border-accent-border bg-accent-muted px-3 py-1.5 font-mono text-xs font-medium text-accent transition-colors hover:bg-accent/20 hover:scale-105 hover:text-bg-base"
 						>
 							<Plus size={14} />
 							<span>New Post</span>
@@ -210,9 +212,11 @@ export default function AdminDashboardPage() {
 									>
 										<td className="p-4 pl-5">
 											<div className="flex flex-col gap-1">
-												<span className="font-medium text-text-primary transition-colors hover:text-accent cursor-pointer">
-													{post.title}
-												</span>
+												<Link href={`/posts/${post.slug}`}>
+													<span className="font-medium text-text-primary transition-colors hover:text-accent cursor-pointer">
+														{post.title}
+													</span>
+												</Link>
 												<span className="text-[0.65rem] text-text-tertiary">
 													slug: {post.slug}
 												</span>
@@ -248,9 +252,22 @@ export default function AdminDashboardPage() {
 													REVIEW
 												</Link>
 											) : (
-												<button className="cursor-pointer border-none bg-transparent p-1 text-text-tertiary transition-colors hover:text-text-primary">
-													<MoreVertical size={16} />
-												</button>
+												<div className="flex items-center justify-end gap-2">
+													<Link
+														href={`/admin/posts/${post.id}/edit`}
+														className="cursor-pointer border-none bg-transparent p-1 text-text-tertiary transition-colors hover:text-text-primary"
+													>
+														<EyeIcon size={16} />
+													</Link>
+													<button
+														className="cursor-pointer border-none bg-transparent p-1 text-text-tertiary transition-colors hover:text-text-primary"
+														onClick={() => {
+															// Handle delete action
+														}}
+													>
+														<TrashIcon size={16} />
+													</button>
+												</div>
 											)}
 										</td>
 									</tr>
