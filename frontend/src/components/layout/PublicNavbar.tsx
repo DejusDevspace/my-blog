@@ -46,8 +46,8 @@ export default function PublicNavbar() {
 						<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
 						<input
 							type="text"
-							placeholder="Search neural architectures..."
-							className="input w-full bg-bg-page pl-10"
+							placeholder="Search posts..."
+							className="input w-full bg-bg-page pl-10!"
 						/>
 					</div>
 				</div>

@@ -8,7 +8,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({ totalPosts }: HeroSectionProps) {
 	return (
-		<div className="w-full bg-bg-page border-t-2 border-accent/80 pt-10 pb-8 px-4 lg:px-8">
+		<div className="w-full flex justify-end bg-bg-page border-t-2 border-accent/80 pt-10 pb-8 px-4 lg:px-8">
 			<div className="mx-auto max-w-7xl flex flex-col items-start gap-4">
 				{/* Headline */}
 				<h1 className="flex items-center flex-wrap gap-2 text-h2 md:text-display font-display font-bold text-text-primary">
