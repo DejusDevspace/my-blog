@@ -19,7 +19,24 @@ import type {
   PostCreate,
   PostListItem,
   PostUpdate,
+  Tag,
 } from "@/types";
+
+/* ============================================================================
+  Public — Taxonomy
+============================================================================ */
+
+/** Fetch all categories for the public feed. */
+export async function getCategories(): Promise<Category[]> {
+  const { data } = await apiClient.get<Category[]>("/categories");
+  return data;
+}
+
+/** Fetch all tags for the public feed. */
+export async function getTags(): Promise<Tag[]> {
+  const { data } = await apiClient.get<Tag[]>("/tags");
+  return data;
+}
 
 /* ============================================================================
   Public — Posts
