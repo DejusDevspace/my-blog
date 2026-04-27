@@ -1,20 +1,25 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
+import { Layers } from "lucide-react";
 import * as api from "@/services/api";
 
 interface FilterSidebarProps {
 	activeCategory: string | null;
 	activeTag: string | null;
+	activeSeries: string | null;
 	onCategoryChange: (categorySlug: string | null) => void;
 	onTagChange: (tagSlug: string | null) => void;
+	onSeriesChange: (seriesSlug: string | null) => void;
 }
 
 export default function FilterSidebar({
 	activeCategory,
 	activeTag,
+	activeSeries,
 	onCategoryChange,
 	onTagChange,
+	onSeriesChange,
 }: FilterSidebarProps) {
 	const { data: categories } = useQuery({
 		queryKey: ["public", "categories"],
@@ -24,6 +29,11 @@ export default function FilterSidebar({
 	const { data: tags } = useQuery({
 		queryKey: ["public", "tags"],
 		queryFn: api.getTags,
+	});
+
+	const { data: seriesList } = useQuery({
+		queryKey: ["public", "series"],
+		queryFn: api.getPublicSeries,
 	});
 
 	return (
@@ -62,6 +72,36 @@ export default function FilterSidebar({
 					))}
 				</ul>
 			</div>
+
+			{/* Series */}
+			{seriesList && seriesList.length > 0 && (
+				<div>
+					<h3 className="mb-4 flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-text-tertiary">
+						<Layers size={10} />
+						Series
+					</h3>
+					<div className="flex flex-col gap-1">
+						{seriesList.map((s) => (
+							<button
+								key={s.id}
+								onClick={() =>
+									onSeriesChange(activeSeries === s.slug ? null : s.slug)
+								}
+								className={`w-full text-left px-3 py-2 text-sm font-medium transition-colors ${
+									activeSeries === s.slug
+										? "bg-accent-muted text-accent border-l-2 border-accent"
+										: "text-text-secondary hover:text-text-primary border-l-2 border-transparent"
+								}`}
+							>
+								<span>{s.title}</span>
+								<span className="ml-1 font-mono text-[0.6rem] text-text-tertiary">
+									({s.post_count})
+								</span>
+							</button>
+						))}
+					</div>
+				</div>
+			)}
 
 			{/* Trending Tags */}
 			<div>

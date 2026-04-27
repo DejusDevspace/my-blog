@@ -67,6 +67,65 @@ export interface TagCreate {
 }
 
 /* ============================================================================
+  Series
+============================================================================ */
+
+/** Minimal series info embedded in post responses. */
+export interface PostSeriesInfo {
+  id: string;
+  title: string;
+  slug: string;
+  series_order: number | null;
+}
+
+/** Series list item with post count (used in feeds and admin list). */
+export interface SeriesListItem {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  status: string;
+  post_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Minimal post data within a series response. */
+export interface SeriesPostItem {
+  id: string;
+  title: string;
+  slug: string;
+  series_order: number | null;
+  status: string;
+  published_at: string | null;
+}
+
+/** Full series with ordered posts. */
+export interface SeriesResponse {
+  id: string;
+  title: string;
+  slug: string;
+  description: string | null;
+  status: string;
+  posts: SeriesPostItem[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SeriesCreate {
+  title: string;
+  description?: string | null;
+  status?: "draft" | "published";
+}
+
+export interface SeriesUpdate {
+  title?: string | null;
+  slug?: string | null;
+  description?: string | null;
+  status?: string | null;
+}
+
+/* ============================================================================
   Post
 ============================================================================ */
 
@@ -79,6 +138,7 @@ export interface PostListItem {
   excerpt: string | null;
   category: Category;
   tags: Tag[];
+  series: PostSeriesInfo | null;
   status: PostStatus;
   is_agent_authored: boolean;
   reading_time_mins: number | null;
@@ -96,6 +156,8 @@ export interface PostCreate {
   content: string;
   category_id: string;
   tag_ids?: string[];
+  series_id?: string | null;
+  series_order?: number | null;
   status?: "draft" | "published";
 }
 
@@ -105,6 +167,8 @@ export interface PostUpdate {
   content?: string | null;
   category_id?: string | null;
   tag_ids?: string[] | null;
+  series_id?: string | null;
+  series_order?: number | null;
   status?: PostStatus | null;
 }
 

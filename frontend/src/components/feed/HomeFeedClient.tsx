@@ -15,6 +15,7 @@ export default function HomeFeedClient() {
 
 	const activeCategory = searchParams.get("category");
 	const activeTag = searchParams.get("tag");
+	const activeSeries = searchParams.get("series");
 
 	const [page, setPage] = useState(1);
 	const [allPosts, setAllPosts] = useState<PostListItem[]>([]);
@@ -24,6 +25,7 @@ export default function HomeFeedClient() {
 		limit: 10,
 		category: activeCategory || undefined,
 		tag: activeTag || undefined,
+		series: activeSeries || undefined,
 	});
 
 	// Reset posts and page when filters change
@@ -32,7 +34,7 @@ export default function HomeFeedClient() {
 		setPage(1);
 		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setAllPosts([]);
-	}, [activeCategory, activeTag]);
+	}, [activeCategory, activeTag, activeSeries]);
 
 	// Accumulate posts when data changes
 	useEffect(() => {
@@ -52,7 +54,10 @@ export default function HomeFeedClient() {
 		}
 	}, [data, page]);
 
-	const updateFilter = (type: "category" | "tag", value: string | null) => {
+	const updateFilter = (
+		type: "category" | "tag" | "series",
+		value: string | null,
+	) => {
 		const params = new URLSearchParams(searchParams.toString());
 		if (value) {
 			params.set(type, value);
@@ -63,6 +68,7 @@ export default function HomeFeedClient() {
 	};
 
 	const hasMore = data ? data.page < data.pages : false;
+	const hasActiveFilters = activeCategory || activeTag || activeSeries;
 
 	return (
 		<>
@@ -72,20 +78,28 @@ export default function HomeFeedClient() {
 				<FilterSidebar
 					activeCategory={activeCategory}
 					activeTag={activeTag}
+					activeSeries={activeSeries}
 					onCategoryChange={(cat) => updateFilter("category", cat)}
 					onTagChange={(tag) => updateFilter("tag", tag)}
+					onSeriesChange={(series) => updateFilter("series", series)}
 				/>
 
 				<div className="flex-1">
-					{(activeCategory || activeTag) && (
+					{hasActiveFilters && (
 						<div className="mb-6 flex items-center justify-between rounded bg-bg-elevated px-4 py-3 border border-border-default">
 							<span className="font-mono text-xs uppercase text-text-secondary">
 								Showing filters:{" "}
 								{activeCategory && (
 									<span className="text-accent">{activeCategory}</span>
 								)}
-								{activeCategory && activeTag && " + "}
-								{activeTag && <span className="text-accent">{activeTag}</span>}
+								{activeCategory && (activeTag || activeSeries) && " + "}
+								{activeTag && (
+									<span className="text-accent">{activeTag}</span>
+								)}
+								{activeTag && activeSeries && " + "}
+								{activeSeries && (
+									<span className="text-accent">{activeSeries}</span>
+								)}
 							</span>
 							<button
 								onClick={() => router.push("/")}
@@ -122,7 +136,7 @@ export default function HomeFeedClient() {
 								Nothing here yet
 							</p>
 							<p className="text-text-secondary">
-								{activeCategory || activeTag
+								{hasActiveFilters
 									? "No posts match this filter."
 									: "Check back soon — content is on the way."}
 							</p>

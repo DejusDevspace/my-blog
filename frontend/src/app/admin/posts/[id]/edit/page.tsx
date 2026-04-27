@@ -46,6 +46,8 @@ export default function EditPostPage() {
 					content: data.content,
 					slug: data.slug,
 					category_id: data.category_id || undefined,
+					series_id: data.series_id || null,
+					series_order: data.series_order || null,
 					status: data.status,
 				},
 			});
@@ -65,6 +67,8 @@ export default function EditPostPage() {
 				slug: post.slug,
 				category_id: post.category?.id || "",
 				tag_names: post.tags?.map((t) => t.name) || [],
+				series_id: post.series?.id || "",
+				series_order: post.series?.series_order ?? null,
 				status: post.status,
 				is_agent_authored: post.is_agent_authored,
 			}}

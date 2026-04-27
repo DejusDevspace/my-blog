@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { format } from "date-fns";
-import { Clock } from "lucide-react";
+import { Clock, Layers } from "lucide-react";
 import type { PostListItem } from "@/types";
 
 interface PostCardProps {
@@ -24,6 +24,15 @@ export default function PostCard({ post }: PostCardProps) {
 					{post.is_agent_authored && (
 						<span className="badge-agent uppercase tracking-wider">
 							✦ AGENT
+						</span>
+					)}
+					{post.series && (
+						<span className="inline-flex items-center gap-1 rounded-md border border-accent-border bg-accent-muted px-2 py-0.5 font-mono text-[0.6rem] text-accent">
+							<Layers size={9} />
+							{post.series.series_order
+								? `Part ${post.series.series_order}`
+								: ""}{" "}
+							of {post.series.title}
 						</span>
 					)}
 				</div>

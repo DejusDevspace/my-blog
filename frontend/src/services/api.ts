@@ -19,6 +19,9 @@ import type {
   PostCreate,
   PostListItem,
   PostUpdate,
+  SeriesCreate,
+  SeriesListItem,
+  SeriesResponse,
   Tag,
 } from "@/types";
 
@@ -39,17 +42,36 @@ export async function getTags(): Promise<Tag[]> {
 }
 
 /* ============================================================================
+  Public — Series
+============================================================================ */
+
+/** Fetch all published series with post counts. */
+export async function getPublicSeries(): Promise<SeriesListItem[]> {
+  const { data } = await apiClient.get<SeriesListItem[]>("/series");
+  return data;
+}
+
+/** Fetch a single published series by slug with its ordered posts. */
+export async function getSeriesBySlug(
+  slug: string,
+): Promise<SeriesResponse> {
+  const { data } = await apiClient.get<SeriesResponse>(`/series/${slug}`);
+  return data;
+}
+
+/* ============================================================================
   Public — Posts
 ============================================================================ */
 
 export interface ListPostsParams {
   category?: string;
   tag?: string;
+  series?: string;
   page?: number;
   limit?: number;
 }
 
-/** Fetch paginated published posts with optional category/tag filters. */
+/** Fetch paginated published posts with optional category/tag/series filters. */
 export async function listPublishedPosts(
   params: ListPostsParams = {},
 ): Promise<PaginatedResponse<PostListItem>> {
@@ -182,6 +204,32 @@ export async function adminDeleteCategory(
 ): Promise<MessageResponse> {
   const { data } = await apiClient.delete<MessageResponse>(
     `/admin/categories/${categoryId}`,
+  );
+  return data;
+}
+
+/* ============================================================================
+  Admin — Series
+============================================================================ */
+
+/** (Admin) List all series with post counts. */
+export async function adminListSeries(
+  params: { status?: string } = {},
+): Promise<SeriesListItem[]> {
+  const { data } = await apiClient.get<SeriesListItem[]>(
+    "/admin/series",
+    { params },
+  );
+  return data;
+}
+
+/** (Admin) Create a new series. */
+export async function adminCreateSeries(
+  payload: SeriesCreate,
+): Promise<SeriesResponse> {
+  const { data } = await apiClient.post<SeriesResponse>(
+    "/admin/series",
+    payload,
   );
   return data;
 }

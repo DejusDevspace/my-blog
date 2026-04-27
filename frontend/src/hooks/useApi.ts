@@ -25,6 +25,9 @@ import type {
   PostCreate,
   PostListItem,
   PostUpdate,
+  SeriesCreate,
+  SeriesListItem,
+  SeriesResponse,
 } from "@/types";
 import * as api from "@/services/api";
 import type { ListPostsParams, AdminListPostsParams } from "@/services/api";
@@ -40,6 +43,11 @@ export const queryKeys = {
     detail: (slug: string) => ["posts", "detail", slug] as const,
     comments: (slug: string) => ["posts", "comments", slug] as const,
   },
+  series: {
+    all: ["series"] as const,
+    list: ["series", "list"] as const,
+    detail: (slug: string) => ["series", "detail", slug] as const,
+  },
   admin: {
     posts: {
       all: ["admin", "posts"] as const,
@@ -49,6 +57,9 @@ export const queryKeys = {
     },
     categories: {
       all: ["admin", "categories"] as const,
+    },
+    series: {
+      all: ["admin", "series"] as const,
     },
   },
   health: ["health"] as const,
@@ -80,6 +91,34 @@ export function usePost(
   return useQuery<Post, ApiError>({
     queryKey: queryKeys.posts.detail(slug),
     queryFn: () => api.getPostBySlug(slug),
+    enabled: !!slug,
+    ...options,
+  });
+}
+
+/* ============================================================================
+  Public — Series
+============================================================================ */
+
+/** Fetch all published series with post counts. */
+export function usePublicSeries(
+  options?: Partial<UseQueryOptions<SeriesListItem[], ApiError>>,
+) {
+  return useQuery<SeriesListItem[], ApiError>({
+    queryKey: queryKeys.series.list,
+    queryFn: api.getPublicSeries,
+    ...options,
+  });
+}
+
+/** Fetch a single published series by slug. */
+export function useSeriesDetail(
+  slug: string,
+  options?: Partial<UseQueryOptions<SeriesResponse, ApiError>>,
+) {
+  return useQuery<SeriesResponse, ApiError>({
+    queryKey: queryKeys.series.detail(slug),
+    queryFn: () => api.getSeriesBySlug(slug),
     enabled: !!slug,
     ...options,
   });
@@ -220,6 +259,38 @@ export function useAdminCategories(
   return useQuery<Category[], ApiError>({
     queryKey: queryKeys.admin.categories.all,
     queryFn: api.adminListCategories,
+    ...options,
+  });
+}
+
+/* ============================================================================
+  Admin — Series
+============================================================================ */
+
+/** (Admin) Fetch all series with post counts. */
+export function useAdminSeries(
+  options?: Partial<UseQueryOptions<SeriesListItem[], ApiError>>,
+) {
+  return useQuery<SeriesListItem[], ApiError>({
+    queryKey: queryKeys.admin.series.all,
+    queryFn: () => api.adminListSeries(),
+    ...options,
+  });
+}
+
+/** (Admin) Create a new series. */
+export function useAdminCreateSeries(
+  options?: UseMutationOptions<SeriesResponse, ApiError, SeriesCreate>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<SeriesResponse, ApiError, SeriesCreate>({
+    mutationFn: api.adminCreateSeries,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.admin.series.all,
+      });
+      queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+    },
     ...options,
   });
 }
