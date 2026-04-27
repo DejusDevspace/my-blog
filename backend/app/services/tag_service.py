@@ -10,11 +10,9 @@ from app.models.post import Tag
 from app.schemas.tag import TagCreate
 
 
-async def list_tags(db: AsyncSession, owner_id: uuid.UUID) -> list[Tag]:
-    """Return all tags for an owner, ordered by name."""
-    result = await db.execute(
-        select(Tag).where(Tag.owner_id == owner_id).order_by(Tag.name)
-    )
+async def list_tags(db: AsyncSession) -> list[Tag]:
+    """Return all tags ordered by name."""
+    result = await db.execute(select(Tag).order_by(Tag.name))
     return list(result.scalars().all())
 
 

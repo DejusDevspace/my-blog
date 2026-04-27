@@ -83,6 +83,14 @@ class Post(Base):
         Integer,
         nullable=True,
     )
+    series_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("series.id", ondelete="SET NULL"),
+        nullable=True,
+    )
+    series_order: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True,
+    )
     published_at: Mapped[datetime | None] = mapped_column(nullable=True)
     deleted_at: Mapped[datetime | None] = mapped_column(nullable=True)
     created_at: Mapped[datetime] = mapped_column(
@@ -97,6 +105,10 @@ class Post(Base):
 
     # --- Relationships ---
     category: Mapped["Category"] = relationship(  # noqa: F821
+        back_populates="posts",
+        lazy="selectin",
+    )
+    series: Mapped["Series | None"] = relationship(  # noqa: F821
         back_populates="posts",
         lazy="selectin",
     )

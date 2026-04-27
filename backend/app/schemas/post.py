@@ -9,6 +9,17 @@ from app.schemas.category import CategoryResponse
 from app.schemas.tag import TagResponse
 
 
+class PostSeriesInfo(BaseModel):
+    """Minimal series info embedded in post responses."""
+
+    id: uuid.UUID
+    title: str
+    slug: str
+    series_order: int | None = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 # ---------------------------------------------------------------------------
 # Request schemas
 # ---------------------------------------------------------------------------
@@ -21,6 +32,8 @@ class PostCreate(BaseModel):
     content: str = Field(..., min_length=1)
     category_id: uuid.UUID
     tag_ids: list[uuid.UUID] = Field(default_factory=list)
+    series_id: uuid.UUID | None = None
+    series_order: int | None = Field(None, ge=1)
     status: str = Field(default="draft", pattern=r"^(draft|published)$")
 
 
@@ -32,6 +45,8 @@ class PostUpdate(BaseModel):
     content: str | None = Field(None, min_length=1)
     category_id: uuid.UUID | None = None
     tag_ids: list[uuid.UUID] | None = None
+    series_id: uuid.UUID | None = None
+    series_order: int | None = Field(None, ge=1)
     status: str | None = Field(
         None,
         pattern=r"^(draft|published|archived)$",
@@ -53,6 +68,7 @@ class PostResponse(BaseModel):
     excerpt: str | None
     category: CategoryResponse
     tags: list[TagResponse]
+    series: PostSeriesInfo | None = None
     status: str
     is_agent_authored: bool
     reading_time_mins: int | None
@@ -72,6 +88,7 @@ class PostListItem(BaseModel):
     excerpt: str | None
     category: CategoryResponse
     tags: list[TagResponse]
+    series: PostSeriesInfo | None = None
     status: str
     is_agent_authored: bool
     reading_time_mins: int | None
