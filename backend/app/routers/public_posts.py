@@ -51,12 +51,18 @@ async def list_posts(
     db: Annotated[AsyncSession, Depends(get_db)],
     category: str | None = Query(None, description="Filter by category slug"),
     tag: str | None = Query(None, description="Filter by tag slug"),
+    series: str | None = Query(None, description="Filter by series slug"),
     page: int = Query(1, ge=1, description="Page number"),
     limit: int = Query(10, ge=1, le=50, description="Items per page"),
 ):
-    """List published posts with optional category/tag filters."""
+    """List published posts with optional category/tag/series filters."""
     posts, total = await post_service.list_published_posts(
-        db, category_slug=category, tag_slug=tag, page=page, limit=limit
+        db,
+        category_slug=category,
+        tag_slug=tag,
+        series_slug=series,
+        page=page,
+        limit=limit,
     )
     return PaginatedResponse(
         items=posts,
