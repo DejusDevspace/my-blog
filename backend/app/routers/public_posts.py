@@ -9,12 +9,23 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.base import get_db
 from app.schemas.common import PaginatedResponse
 from app.schemas.post import PostListItem, PostResponse
-from app.services import post_service
+from app.schemas.category import CategoryResponse
+from app.schemas.tag import TagResponse
+from app.services import post_service, category_service, tag_service
 
-router = APIRouter(prefix="/posts", tags=["Posts (Public)"])
+router = APIRouter(prefix="", tags=["Public API"])
 
+@router.get("/categories", response_model=list[CategoryResponse])
+async def get_public_categories(db: Annotated[AsyncSession, Depends(get_db)]):
+    """List all categories for the public feed."""
+    return await category_service.list_categories(db)
 
-@router.get("", response_model=PaginatedResponse[PostListItem])
+@router.get("/tags", response_model=list[TagResponse])
+async def get_public_tags(db: Annotated[AsyncSession, Depends(get_db)]):
+    """List all tags for the public feed."""
+    return await tag_service.list_tags(db)
+
+@router.get("/posts", response_model=PaginatedResponse[PostListItem])
 async def list_posts(
     db: Annotated[AsyncSession, Depends(get_db)],
     category: str | None = Query(None, description="Filter by category slug"),
@@ -35,7 +46,7 @@ async def list_posts(
     )
 
 
-@router.get("/{slug}", response_model=PostResponse)
+@router.get("/posts/{slug}", response_model=PostResponse)
 async def get_post(
     slug: str,
     db: Annotated[AsyncSession, Depends(get_db)],
