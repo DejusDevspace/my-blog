@@ -1,26 +1,12 @@
 # Product Requirements Document
+
 ## d3jusdevspace — Personal AI Knowledge Hub with Multi-Agent Content System
 
-**Version:** 2.0  
-**Status:** Draft  
-**Author:** Consultation output — Senior Engineering Review  
-**Date:** April 2026  
+**Version:** 2.0
+**Status:** Draft
+**Author:** Deju
+**Date:** April 2026
 **Previous version:** PRD v1.0
-
----
-
-## Changelog (v1 → v2)
-
-| # | Change | Reason |
-|---|--------|--------|
-| 1 | SaaS/multi-tenant UI removed from all sections | Not a v1 goal; focus is personal use and portfolio |
-| 2 | `owner_id` retained silently in schema | Zero-cost future-proofing; no logic or UI required |
-| 3 | Langfuse scoped to Phase 3 with defined trace targets | Prevents ambiguity during agent development |
-| 4 | BlockNote output format locked to markdown | Day-one schema decision; must align with agent output format |
-| 5 | Embedding model explicitly named (text-embedding-3-small, 1536d) | Required before pgvector column can be defined |
-| 6 | Diff visualisation scoped to Phase 4 | Depends on post_feedback table; prevents premature build |
-| 7 | OpenAI as sole LLM provider | Reduces complexity; single API key, single SDK |
-| 8 | Portfolio value section added | Explicit articulation of what this project demonstrates |
 
 ---
 
@@ -50,11 +36,11 @@
 
 ### Core Philosophy
 
-- **Human-in-the-loop AI system** — AI generates drafts; the human approves and refines. Nothing publishes without author sign-off.
+- **Human-in-the-loop AI system**: AI generates drafts; the human approves and refines. Nothing publishes without author sign-off.
 - **Built for real usage, not just demonstration** — the system must be something the author actively wants to use daily, not a demo that sits idle.
-- **System improves over time** — author feedback on AI drafts is captured and fed back into the agent pipeline to improve alignment over time.
-- **Explainability and portfolio value** — architecture decisions are deliberate and defensible; the codebase should be readable as a portfolio artifact.
-- **Controlled complexity** — no over-engineering. The agent system is constrained to 3–4 nodes maximum. Every added component must earn its place.
+- **System improves over time**: author feedback on AI drafts is captured and fed back into the agent pipeline to improve alignment over time.
+- **Explainability and portfolio value**: architecture decisions are deliberate and defensible; the codebase should be readable as a portfolio artifact.
+- **Controlled complexity**: no over-engineering. The agent system is constrained to 3–4 nodes maximum. Every added component must earn its place.
 
 ### Primary Goals
 
@@ -67,14 +53,14 @@
 
 ### Success Metrics (v1)
 
-| Metric | Target |
-|--------|--------|
-| Agent draft quality | Fewer than 2 manual edits on average before approval |
-| Semantic search latency | Results returned in under 500ms (p95) |
-| Page load performance | Blog post LCP under 1.5s on standard broadband |
-| Admin usability | Author can publish a post without touching any code |
-| Agent alignment over time | Measurable reduction in edits-per-post across Phase 4 feedback cycles |
-| Codebase quality | Clean, maintainable, well-documented — readable as a portfolio artifact |
+| Metric                    | Target                                                                 |
+| ------------------------- | ---------------------------------------------------------------------- |
+| Agent draft quality       | Fewer than 2 manual edits on average before approval                   |
+| Semantic search latency   | Results returned in under 500ms (p95)                                  |
+| Page load performance     | Blog post LCP under 1.5s on standard broadband                         |
+| Admin usability           | Author can publish a post without touching any code                    |
+| Agent alignment over time | Measurable reduction in edits-per-post across Phase 4 feedback cycles  |
+| Codebase quality          | Clean, maintainable, well-documented, readable as a portfolio artifact |
 
 ---
 
@@ -83,15 +69,17 @@
 ### v1 Roles
 
 **Owner / Admin (author)**
+
 - Full access to admin panel
 - Can create, edit, publish, unpublish, and delete posts
 - Can manage categories and tags
 - Can configure and trigger the AI agent pipeline
 - Can approve, edit, or reject agent-generated drafts
-- Can update personal context (bio, interests, tone notes)
+- Can update personal context (bio, interests)
 - Can delete comments
 
 **Public Reader (unauthenticated)**
+
 - Can browse and read all published posts
 - Can filter by category and tag
 - Can use global semantic search
@@ -106,13 +94,13 @@
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                 Next.js 14 (App Router)                  │
-│  Public Blog │ Admin Panel │ Search UI │ Auth            │
+│                    Next.js 16                           │
+│  Public Blog │ Admin Panel │ Search UI │ Auth           │
 └──────────────────────┬──────────────────────────────────┘
                        │ REST / SSE
 ┌──────────────────────▼──────────────────────────────────┐
-│                    FastAPI (Python)                       │
-│  Posts API │ Search API │ Agent API │ Context API        │
+│                    FastAPI (Python)                     │
+│  Posts API │ Search API │ Agent API │ Context API       │
 └────┬───────────────────────────────────────┬────────────┘
      │                                       │
 ┌────▼──────────────────┐   ┌───────────────▼────────────┐
@@ -132,6 +120,7 @@
 ```
 
 **Deployment targets:**
+
 - Frontend: Vercel
 - Backend (FastAPI): Railway or Render
 - Database: Supabase or Neon (managed Postgres + pgvector)
@@ -142,7 +131,7 @@
 
 ## 5. Repository Structure
 
-Single monorepo managed with **Turborepo**.
+Single monorepo for frontend and backend with AI Layer. Example repo structure (tentative):
 
 ```
 d3jusdevspace/
@@ -184,7 +173,7 @@ d3jusdevspace/
 - Paginated list of published posts, sorted by `published_at` descending
 - Each post card shows: title, excerpt (first 160 chars), category badge, tags, author label (Human or Agent), reading time estimate, published date
 - Agent-authored posts display a distinct "✦ Agent" badge
-- Filter bar for category and tag — URL-param driven for shareability
+- Filter bar for category and tag, URL-param driven for shareability
 - No authentication required
 
 #### 6.1.2 Post Detail Page
@@ -199,12 +188,12 @@ d3jusdevspace/
 
 #### 6.1.3 Content Categories
 
-| Category | Description |
-|----------|-------------|
-| `projects` | Builds, side projects, case studies |
-| `thoughts` | Opinions, reflections, personal notes |
-| `blog` | How-tos, technical breakdowns, knowledge sharing |
-| `docs` | Technical documentation, references |
+| Category   | Description                                      |
+| ---------- | ------------------------------------------------ |
+| `projects` | Builds, side projects, case studies              |
+| `thoughts` | Opinions, reflections, personal notes            |
+| `blog`     | How-tos, technical breakdowns, knowledge sharing |
+| `docs`     | Technical documentation, references              |
 
 Tags are free-form and many-to-many.
 
@@ -241,6 +230,7 @@ All admin routes are protected behind NextAuth.js. Single admin account provisio
 **Output format: Markdown.** BlockNote is configured to output clean markdown strings. This aligns human-written and agent-written content in a single, portable format stored in the `posts.content` TEXT column.
 
 Supported block types:
+
 - Headings (H1, H2, H3)
 - Paragraph, blockquote, divider
 - Bulleted list, numbered list
@@ -249,6 +239,7 @@ Supported block types:
 - Inline link, inline code
 
 Additional behaviours:
+
 - Slash command menu (`/`) for block insertion
 - Autosave to `localStorage` every 30 seconds
 - Manual "Save Draft" and "Publish" buttons in the editor toolbar
@@ -265,12 +256,12 @@ Additional behaviours:
 
 Admin settings page for the personal context fed to AI agents:
 
-| Field | Description | Used by |
-|-------|-------------|---------|
-| Bio | Author background, profession, current focus (max 1000 chars) | Orchestrator, Writer |
-| Interests | Tag-style list of topics (e.g. "LangGraph", "FastAPI", "career growth") | Orchestrator |
-| Tone notes | Voice, humor style, things to avoid | Tone Agent |
-| Writing samples | Text samples for style calibration | Context Agent |
+| Field           | Description                                                             | Used by              |
+| --------------- | ----------------------------------------------------------------------- | -------------------- |
+| Bio             | Author background, profession, current focus (max 1000 chars)           | Orchestrator, Writer |
+| Interests       | Tag-style list of topics (e.g. "LangGraph", "FastAPI", "career growth") | Orchestrator         |
+| Tone notes      | Voice, humor style, things to avoid                                     | Tone Agent           |
+| Writing samples | Text samples for style calibration                                      | Context Agent        |
 
 On save, all fields are re-embedded using `text-embedding-3-small` and upserted into `context_embeddings`.
 
@@ -293,6 +284,7 @@ Lightweight internal metrics displayed in admin. See Section 11 for full detail.
 The pipeline is a directed graph with typed `AgentState` passed between nodes. Maximum 4 nodes in v1.
 
 **Orchestrator Node**
+
 - Entry point for scheduled and manual runs
 - Queries `user_context` interests list
 - Queries pgvector for recent post topics to avoid repetition (last 30 days)
@@ -300,11 +292,13 @@ The pipeline is a directed graph with typed `AgentState` passed between nodes. M
 - Passes topic + full author context to downstream nodes
 
 **Research Agent Node**
+
 - Runs 3–5 Tavily searches on the selected topic
 - Summarises each source into structured findings (key points, relevance, URL)
 - Deduplicates against previously cited sources in the DB
 
 **Tone/Feedback Agent Node**
+
 - Reads `post_feedback` for recent approval/rejection signals
 - Reads tone notes and writing samples from `user_context`
 - Reads semantically similar past posts via pgvector
@@ -312,25 +306,27 @@ The pipeline is a directed graph with typed `AgentState` passed between nodes. M
 - Incorporates up to 5 recent feedback examples as few-shot guidance
 
 **Writer Agent Node**
+
 - Receives: topic, research findings, style context, tone directive
 - Generates a full markdown blog post via OpenAI GPT-4o
 - System prompt instructs the model to write as the author, not as an AI assistant
 - Output: title, content (markdown), suggested tags, suggested category, sources list
 
 **Review Router (final node)**
+
 - Saves output as `status: agent_draft`, `is_agent_authored: true`
 - Logs run to `agent_runs` table
 - Sends email notification via Resend (configurable)
 
 #### 6.3.2 Feedback & Learning Loop
 
-| Event | Signal | What is stored |
-|-------|--------|----------------|
-| Approved, no edits | Positive | `rating: positive` |
-| Approved, with edits | Mixed | `rating: mixed` + unified diff of changes |
-| Rejected | Negative | `rating: negative` + optional rejection notes |
+| Event                | Signal   | What is stored                                |
+| -------------------- | -------- | --------------------------------------------- |
+| Approved, no edits   | Positive | `rating: positive`                            |
+| Approved, with edits | Mixed    | `rating: mixed` + unified diff of changes     |
+| Rejected             | Negative | `rating: negative` + optional rejection notes |
 
-The Tone/Feedback Agent reads this history on each run and includes recent examples as few-shot prompt context. No fine-tuning is performed — the loop operates entirely at the prompt level.
+The Tone/Feedback Agent reads this history on each run and includes recent examples as few-shot prompt context. No fine-tuning is performed, the loop operates entirely at the prompt level.
 
 #### 6.3.3 Embedding Pipeline
 
@@ -356,13 +352,15 @@ The Tone/Feedback Agent reads this history on each run and includes recent examp
 **Schema fields:** `id`, `post_id`, `owner_id`, `display_name` (nullable = anonymous), `body` (plain text, max 1000 chars), `status`, `created_at`
 
 **Spam filtering:**
-- Honeypot hidden field — submissions that populate it are silently discarded
+
+- Honeypot hidden field: submissions that populate it are silently discarded
 - Basic server-side keyword blocklist
-- Rate limiting: max 3 comments per IP per hour (FastAPI middleware)
+- Rate limiting: max 5 comments per IP per hour (FastAPI middleware)
 - Comments that pass checks are auto-approved and immediately visible
 
 **Anonymous option:**
-- Toggle on comment form — when on, `display_name` is null and displayed as "Anonymous"
+
+- Toggle on comment form: when on, `display_name` is null and displayed as "Anonymous"
 - When off, a name field appears (required, max 50 chars)
 - No email required; no reader accounts
 
@@ -377,14 +375,17 @@ Context is managed from the admin panel (Section 6.2.4) and stored in `user_cont
 ## 7. Data Models
 
 ### `owners`
+
 ```sql
 id            UUID PRIMARY KEY DEFAULT gen_random_uuid()
 email         TEXT UNIQUE NOT NULL
 created_at    TIMESTAMPTZ DEFAULT now()
 ```
-*Single row seeded in v1. No sign-up UI. Present to make all queries owner-scoped without future schema rewrites.*
+
+_Single row seeded in v1. No sign-up UI. Present to make all queries owner-scoped without future schema rewrites._
 
 ### `posts`
+
 ```sql
 id                UUID PRIMARY KEY DEFAULT gen_random_uuid()
 owner_id          UUID REFERENCES owners(id)
@@ -404,6 +405,7 @@ updated_at        TIMESTAMPTZ DEFAULT now()
 ```
 
 ### `tags`
+
 ```sql
 id        UUID PRIMARY KEY DEFAULT gen_random_uuid()
 owner_id  UUID REFERENCES owners(id)
@@ -413,6 +415,7 @@ UNIQUE(owner_id, slug)
 ```
 
 ### `post_tags`
+
 ```sql
 post_id  UUID REFERENCES posts(id) ON DELETE CASCADE
 tag_id   UUID REFERENCES tags(id) ON DELETE CASCADE
@@ -420,6 +423,7 @@ PRIMARY KEY (post_id, tag_id)
 ```
 
 ### `post_embeddings`
+
 ```sql
 id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
 post_id     UUID REFERENCES posts(id) ON DELETE CASCADE
@@ -428,6 +432,7 @@ created_at  TIMESTAMPTZ DEFAULT now()
 ```
 
 ### `comments`
+
 ```sql
 id           UUID PRIMARY KEY DEFAULT gen_random_uuid()
 post_id      UUID REFERENCES posts(id) ON DELETE CASCADE
@@ -440,6 +445,7 @@ created_at   TIMESTAMPTZ DEFAULT now()
 ```
 
 ### `user_context`
+
 ```sql
 id              UUID PRIMARY KEY DEFAULT gen_random_uuid()
 owner_id        UUID REFERENCES owners(id) UNIQUE
@@ -451,6 +457,7 @@ updated_at      TIMESTAMPTZ DEFAULT now()
 ```
 
 ### `context_embeddings`
+
 ```sql
 id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
 owner_id    UUID REFERENCES owners(id)
@@ -460,6 +467,7 @@ updated_at  TIMESTAMPTZ DEFAULT now()
 ```
 
 ### `post_feedback`
+
 ```sql
 id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
 post_id     UUID REFERENCES posts(id)
@@ -471,6 +479,7 @@ created_at  TIMESTAMPTZ DEFAULT now()
 ```
 
 ### `agent_runs`
+
 ```sql
 id              UUID PRIMARY KEY DEFAULT gen_random_uuid()
 owner_id        UUID REFERENCES owners(id)
@@ -485,6 +494,7 @@ completed_at    TIMESTAMPTZ
 ```
 
 ### `agent_schedule`
+
 ```sql
 id          UUID PRIMARY KEY DEFAULT gen_random_uuid()
 owner_id    UUID REFERENCES owners(id) UNIQUE
@@ -501,62 +511,66 @@ updated_at  TIMESTAMPTZ DEFAULT now()
 
 ### Public Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/posts` | List published posts. Params: `category`, `tag`, `page`, `limit` |
-| GET | `/posts/{slug}` | Single published post by slug |
-| GET | `/search?q={query}` | Semantic + fallback keyword search |
-| POST | `/comments` | Submit comment on a post |
-| GET | `/posts/{slug}/comments` | Approved comments for a post |
+| Method | Path                     | Description                                                      |
+| ------ | ------------------------ | ---------------------------------------------------------------- |
+| GET    | `/posts`                 | List published posts. Params: `category`, `tag`, `page`, `limit` |
+| GET    | `/posts/{slug}`          | Single published post by slug                                    |
+| GET    | `/search?q={query}`      | Semantic + fallback keyword search                               |
+| POST   | `/comments`              | Submit comment on a post                                         |
+| GET    | `/posts/{slug}/comments` | Approved comments for a post                                     |
 
 ### Admin Endpoints (Auth required)
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/admin/posts` | All posts (all statuses) |
-| POST | `/admin/posts` | Create post |
-| PATCH | `/admin/posts/{id}` | Update post |
-| DELETE | `/admin/posts/{id}` | Soft delete post |
-| GET | `/admin/agent-drafts` | List agent_draft posts |
-| POST | `/admin/agent-drafts/{id}/approve` | Approve draft |
-| POST | `/admin/agent-drafts/{id}/reject` | Reject draft |
-| GET | `/admin/context` | Get user context |
-| PUT | `/admin/context` | Update context (triggers re-embedding) |
-| GET | `/admin/agent/schedule` | Get agent schedule |
-| PUT | `/admin/agent/schedule` | Update schedule |
-| POST | `/admin/agent/run` | Trigger manual agent run |
-| GET | `/admin/agent/runs` | Agent run history |
-| GET | `/admin/agent/runs/{id}/log` | Stream run log via SSE |
-| DELETE | `/admin/comments/{id}` | Delete comment |
-| GET | `/admin/categories` | List categories |
-| POST | `/admin/categories` | Create category |
-| PATCH | `/admin/categories/{id}` | Rename category |
-| DELETE | `/admin/categories/{id}` | Delete category |
+| Method | Path                               | Description                            |
+| ------ | ---------------------------------- | -------------------------------------- |
+| GET    | `/admin/posts`                     | All posts (all statuses)               |
+| POST   | `/admin/posts`                     | Create post                            |
+| PATCH  | `/admin/posts/{id}`                | Update post                            |
+| DELETE | `/admin/posts/{id}`                | Soft delete post                       |
+| GET    | `/admin/agent-drafts`              | List agent_draft posts                 |
+| POST   | `/admin/agent-drafts/{id}/approve` | Approve draft                          |
+| POST   | `/admin/agent-drafts/{id}/reject`  | Reject draft                           |
+| GET    | `/admin/context`                   | Get user context                       |
+| PUT    | `/admin/context`                   | Update context (triggers re-embedding) |
+| GET    | `/admin/agent/schedule`            | Get agent schedule                     |
+| PUT    | `/admin/agent/schedule`            | Update schedule                        |
+| POST   | `/admin/agent/run`                 | Trigger manual agent run               |
+| GET    | `/admin/agent/runs`                | Agent run history                      |
+| GET    | `/admin/agent/runs/{id}/log`       | Stream run log via SSE                 |
+| DELETE | `/admin/comments/{id}`             | Delete comment                         |
+| GET    | `/admin/categories`                | List categories                        |
+| POST   | `/admin/categories`                | Create category                        |
+| PATCH  | `/admin/categories/{id}`           | Rename category                        |
+| DELETE | `/admin/categories/{id}`           | Delete category                        |
 
 ---
 
 ## 9. Non-Functional Requirements
 
 ### Performance
+
 - Blog post LCP < 1.5s on standard broadband
 - Semantic search < 500ms (p95)
 - Admin CRUD operations < 300ms (p95)
 - Agent runs complete within 90 seconds; long runs stream progress via SSE
 
 ### Security
+
 - Admin routes protected by NextAuth.js session middleware
 - FastAPI admin endpoints validate signed JWT from NextAuth
-- Rate limiting on comment submission: 3 per IP per hour
+- Rate limiting on comment submission: 5 per IP per hour
 - Honeypot field on all public forms
 - All secrets in `.env` files, never committed; documented in `.env.example`
 - Input sanitisation on all user-generated content
 
 ### Reliability
-- Agent run failures caught and logged to `agent_runs.status = failed` — server does not crash
+
+- Agent run failures caught and logged to `agent_runs.status = failed`. Server does not crash
 - BlockNote autosave to `localStorage` every 30 seconds
 - Soft deletes on all content
 
 ### SEO
+
 - Dynamic `<title>` and `<meta description>` via Next.js `generateMetadata`
 - OpenGraph tags on every post
 - Static generation (`generateStaticParams`) for published posts with revalidation on publish/edit
@@ -567,29 +581,29 @@ updated_at  TIMESTAMPTZ DEFAULT now()
 
 ## 10. Tech Stack
 
-| Layer | Technology | Notes |
-|-------|-----------|-------|
-| Frontend | Next.js 14 (App Router) | SSR + SSG for SEO |
-| Styling | Tailwind CSS + shadcn/ui | Component primitives |
-| Editor | BlockNote | Notion-style WYSIWYG, markdown output |
-| State / data fetching | Zustand + React Query | Server state via React Query |
-| Auth | NextAuth.js | Admin-only, credentials provider |
-| Backend | FastAPI (Python 3.11+) | Async, type-safe |
-| Agent framework | LangGraph | Stateful multi-agent graph, max 4 nodes |
-| LLM provider | OpenAI GPT-4o | Single provider for simplicity |
-| Web search tool | Tavily API | Built for LLM agents |
-| Embeddings | OpenAI text-embedding-3-small | 1536 dimensions |
-| Database | PostgreSQL 15+ | Primary data store |
-| Vector extension | pgvector | Semantic search + agent memory |
-| DB hosting | Supabase or Neon | Managed Postgres + pgvector |
-| Backend hosting | Railway or Render | Python deploy targets |
-| Frontend hosting | Vercel | Zero-config Next.js |
-| Image hosting | Cloudinary | CDN, transformations, free tier |
-| Email | Resend | Agent run notifications |
-| Scheduler | APScheduler (Python) | In-process cron |
-| Tracing | Langfuse | LLM + agent observability (Phase 3) |
-| Monorepo | Turborepo | Task orchestration, shared packages |
-| CI/CD | GitHub Actions | Lint, test, deploy on merge to main |
+| Layer                 | Technology                    | Notes                                   |
+| --------------------- | ----------------------------- | --------------------------------------- |
+| Frontend              | Next.js 16                    | SSR + SSG for SEO                       |
+| Styling               | Tailwind CSS + shadcn/ui      | Component primitives                    |
+| Editor                | BlockNote                     | Notion-style WYSIWYG, markdown output   |
+| State / data fetching | Zustand + React Query         | Server state via React Query            |
+| Auth                  | NextAuth.js                   | Admin-only, credentials provider        |
+| Backend               | FastAPI (Python 3.13+)        | Async, type-safe                        |
+| Agent framework       | LangGraph                     | Stateful multi-agent graph, max 4 nodes |
+| LLM provider          | OpenAI GPT-4o                 | Single provider for simplicity          |
+| Web search tool       | Tavily API                    | Built for LLM agents                    |
+| Embeddings            | OpenAI text-embedding-3-small | 1536 dimensions                         |
+| Database              | PostgreSQL 15+                | Primary data store                      |
+| Vector extension      | pgvector                      | Semantic search + agent memory          |
+| DB hosting            | Supabase or Neon              | Managed Postgres + pgvector             |
+| Backend hosting       | Railway or Render             | Python deploy targets                   |
+| Frontend hosting      | Vercel                        | Zero-config Next.js                     |
+| Image hosting         | Cloudinary                    | CDN, transformations, free tier         |
+| Email                 | Resend                        | Agent run notifications                 |
+| Scheduler             | APScheduler (Python)          | In-process cron                         |
+| Tracing               | Langfuse                      | LLM + agent observability (Phase 3)     |
+| Monorepo              | Turborepo                     | Task orchestration, shared packages     |
+| CI/CD                 | GitHub Actions                | Lint, test, deploy on merge to main     |
 
 ---
 
@@ -610,13 +624,13 @@ Langfuse is cloud-hosted on its free tier. No self-hosted observability infrastr
 
 Lightweight metrics displayed in the admin panel, computed from existing DB tables:
 
-| Metric | Source |
-|--------|--------|
-| Draft approval rate | `post_feedback` |
-| Average edits per approved post | `post_feedback.edit_diff` |
-| Rejection rate | `post_feedback` |
-| Content diff visualisation | `post_feedback.edit_diff` — AI output vs final |
-| Agent run summaries | `agent_runs` |
+| Metric                          | Source                                        |
+| ------------------------------- | --------------------------------------------- |
+| Draft approval rate             | `post_feedback`                               |
+| Average edits per approved post | `post_feedback.edit_diff`                     |
+| Rejection rate                  | `post_feedback`                               |
+| Content diff visualisation      | `post_feedback.edit_diff`: AI output vs final |
+| Agent run summaries             | `agent_runs`                                  |
 
 > **Note:** Content diff visualisation is a Phase 4 feature. It depends on `post_feedback` and edit diff storage being fully operational from Phase 4 feedback loop work. It must not be started earlier.
 
@@ -625,9 +639,10 @@ Lightweight metrics displayed in the admin panel, computed from existing DB tabl
 ## 12. Development Phases & Timeline
 
 ### Phase 1 — Foundation (Core Blog, No AI)
+
 **Goal:** A fully working, deployable personal blog the author can use immediately.
 
-- [ ] Monorepo scaffolding (Turborepo, apps/web, apps/api, packages/)
+- [ ] Monorepo scaffolding
 - [ ] PostgreSQL schema + Alembic migrations
 - [ ] FastAPI: posts CRUD, categories, tags, comments endpoints
 - [ ] Next.js: public blog feed, post detail, markdown rendering
@@ -646,6 +661,7 @@ Lightweight metrics displayed in the admin panel, computed from existing DB tabl
 ---
 
 ### Phase 2 — Semantic Layer
+
 **Goal:** All content is semantically searchable. Agent infrastructure is in place.
 
 - [ ] pgvector extension enabled and configured
@@ -661,6 +677,7 @@ Lightweight metrics displayed in the admin panel, computed from existing DB tabl
 ---
 
 ### Phase 3 — AI Agent Pipeline
+
 **Goal:** Agents generate draft posts autonomously on a configurable schedule.
 
 - [ ] LangGraph graph definition and AgentState schema
@@ -681,6 +698,7 @@ Lightweight metrics displayed in the admin panel, computed from existing DB tabl
 ---
 
 ### Phase 4 — Learning Loop & Observability
+
 **Goal:** Agent output improves from author feedback. Internal metrics are visible.
 
 - [ ] `post_feedback` table and schema
@@ -696,6 +714,7 @@ Lightweight metrics displayed in the admin panel, computed from existing DB tabl
 ---
 
 ### Phase 5 — Polish
+
 **Goal:** Production quality, performance, and any remaining gaps.
 
 - [ ] Full mobile responsiveness audit
@@ -712,45 +731,36 @@ Lightweight metrics displayed in the admin panel, computed from existing DB tabl
 
 This project is designed to be read as a portfolio artifact as much as it is designed to be used. It demonstrates:
 
-| Skill area | What it shows |
-|------------|---------------|
-| Multi-agent AI system design | LangGraph graph with typed state, constrained node count, deliberate agent responsibilities |
-| Human-in-the-loop AI workflows | Draft approval system, feedback capture, no auto-publishing |
-| Semantic search with vector databases | pgvector, cosine similarity, embedding pipeline, full-text fallback |
-| Feedback-driven AI improvement | Prompt-level learning loop using stored diffs and few-shot examples |
-| Full-stack engineering | Next.js, FastAPI, PostgreSQL, Turborepo monorepo, CI/CD |
-| Real-world AI observability | Langfuse integration for LLM and agent tracing |
-| Production deployment | Vercel, Railway/Render, managed Postgres, image CDN |
-| Clean architecture | Separation of concerns across frontend, backend, agent, and data layers |
+| Skill area                            | What it shows                                                                               |
+| ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Multi-agent AI system design          | LangGraph graph with typed state, constrained node count, deliberate agent responsibilities |
+| Human-in-the-loop AI workflows        | Draft approval system, feedback capture, no auto-publishing                                 |
+| Semantic search with vector databases | pgvector, cosine similarity, embedding pipeline, full-text fallback                         |
+| Feedback-driven AI improvement        | Prompt-level learning loop using stored diffs and few-shot examples                         |
+| Full-stack engineering                | Next.js, FastAPI, PostgreSQL, monorepo, CI/CD                                               |
+| Real-world AI observability           | Langfuse integration for LLM and agent tracing                                              |
+| Production deployment                 | Vercel, Railway/Render, managed Postgres, image CDN                                         |
+| Clean architecture                    | Separation of concerns across frontend, backend, agent, and data layers                     |
 
 ---
 
 ## 14. Non-Goals (v1)
 
-| Item | Reason deferred |
-|------|----------------|
-| SaaS / multi-tenant UI | Not a v1 goal; personal use only |
-| Billing or monetization | No SaaS pivot in v1 |
-| Full autonomy / auto-publishing | Human review is a core design principle |
-| Fine-tuning | Prompt-level learning loop is sufficient for v1 |
-| Knowledge graph | Adds significant complexity without clear v1 payoff |
-| Comments moderation queue | Basic spam filtering is sufficient for personal blog |
-| Guest / co-authors | Single-author only |
-| Mobile app | Web-first only |
-| Self-hosted observability | Langfuse cloud handles this |
-| Over-engineered agent expansion | 4 nodes maximum; every agent must earn its place |
+| Item                            | Reason deferred                                      |
+| ------------------------------- | ---------------------------------------------------- |
+| SaaS / multi-tenant UI          | Not a v1 goal; personal use only                     |
+| Billing or monetization         | No SaaS pivot in v1                                  |
+| Full autonomy / auto-publishing | Human review is a core design principle              |
+| Fine-tuning                     | Prompt-level learning loop is sufficient for v1      |
+| Knowledge graph                 | Adds significant complexity without clear v1 payoff  |
+| Comments moderation queue       | Basic spam filtering is sufficient for personal blog |
+| Guest / co-authors              | Single-author only                                   |
+| Mobile app                      | Web-first only                                       |
+| Self-hosted observability       | Langfuse cloud handles this                          |
+| Over-engineered agent expansion | 4 nodes maximum; every agent must earn its place     |
 
 ---
 
-## 15. Open Questions
-
-| # | Question | Impact | Decision needed by |
-|---|----------|--------|--------------------|
-| 1 | Supabase vs Neon for managed Postgres? Supabase has a built-in auth SDK and realtime layer; Neon has serverless branching useful for staging environments. | DB hosting, local dev setup | Before Phase 1 |
-| 2 | Railway vs Render for FastAPI hosting? Railway has better developer experience; Render has a more predictable free tier. | Backend deploy pipeline | Before Phase 1 |
-| 3 | What are your portfolio website's exact colour tokens (hex values)? Required before any frontend UI work begins. | Tailwind config, design system | Before Phase 1 UI work |
-| 4 | Should agent run email notifications (Resend) be on by default, or opt-in from the admin config page? | Agent configuration UI | Before Phase 3 |
-
 ---
 
-*End of PRD v2.0 — d3jusdevspace*
+_End of PRD v2.0 — d3jusdevspace_
