@@ -13,8 +13,13 @@ import {
 	Plus,
 	X,
 	Sparkles,
+	Layers,
 } from "lucide-react";
-import { useAdminCategories } from "@/hooks/useApi";
+import {
+	useAdminCategories,
+	useAdminSeries,
+	useAdminCreateSeries,
+} from "@/hooks/useApi";
 import type { PostStatus } from "@/types";
 
 // Dynamically import BlockNote to avoid SSR issues
@@ -35,6 +40,8 @@ interface EditorData {
 	slug: string;
 	category_id: string;
 	tag_names: string[]; // Simplification: we'll handle tag IDs at the API boundary
+	series_id: string;
+	series_order: number | null;
 	status: PostStatus;
 }
 
@@ -57,6 +64,8 @@ export default function PostEditorClient({
 		slug: initialData.slug || "",
 		category_id: initialData.category_id || "",
 		tag_names: initialData.tag_names || [],
+		series_id: initialData.series_id || "",
+		series_order: initialData.series_order ?? null,
 		status: initialData.status || "draft",
 	});
 
@@ -64,8 +73,12 @@ export default function PostEditorClient({
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 	const [sidebarOpen, setSidebarOpen] = useState(false); // For mobile
 	const [tagInput, setTagInput] = useState("");
+	const [showNewSeries, setShowNewSeries] = useState(false);
+	const [newSeriesTitle, setNewSeriesTitle] = useState("");
 
 	const { data: categories } = useAdminCategories();
+	const { data: seriesList } = useAdminSeries();
+	const createSeriesMutation = useAdminCreateSeries();
 
 	// Auto-slugify title if new and slug hasn't been manually touched much
 	useEffect(() => {
@@ -140,6 +153,21 @@ export default function PostEditorClient({
 			"tag_names",
 			data.tag_names.filter((t) => t !== tagToRemove),
 		);
+	};
+
+	const handleCreateSeries = async () => {
+		if (!newSeriesTitle.trim()) return;
+		try {
+			const created = await createSeriesMutation.mutateAsync({
+				title: newSeriesTitle.trim(),
+				status: "draft",
+			});
+			handleChange("series_id", created.id);
+			setNewSeriesTitle("");
+			setShowNewSeries(false);
+		} catch (error) {
+			console.error("Failed to create series", error);
+		}
 	};
 
 	const handleSaveDraft = async () => {
@@ -346,6 +374,111 @@ export default function PostEditorClient({
 									</option>
 								))}
 							</select>
+						</div>
+
+						{/* Series */}
+						<div className="flex flex-col gap-2">
+							<label className="font-mono text-xs font-bold uppercase tracking-widest text-text-tertiary">
+								<span className="flex items-center gap-1.5">
+									<Layers size={10} />
+									Series
+								</span>
+							</label>
+							<select
+								className="input h-10 w-full cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5YWEzYjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=')] bg-size-16px bg-position[right_12px_center] bg-no-repeat pr-10"
+								value={data.series_id}
+								onChange={(e) => {
+									handleChange("series_id", e.target.value);
+									// Reset order when changing series
+									if (!e.target.value) {
+										handleChange("series_order", null);
+									}
+								}}
+							>
+								<option value="">No series</option>
+								{seriesList?.map((s) => (
+									<option key={s.id} value={s.id}>
+										{s.title} ({s.post_count} posts)
+									</option>
+								))}
+							</select>
+
+							{/* Series order — only shown when a series is selected */}
+							{data.series_id && (
+								<div className="flex items-center gap-2">
+									<label className="font-mono text-[0.65rem] text-text-tertiary whitespace-nowrap">
+										Position
+									</label>
+									<input
+										type="number"
+										className="input h-8 w-20 font-mono text-sm text-center"
+										placeholder="#"
+										min={1}
+										value={data.series_order ?? ""}
+										onChange={(e) =>
+											handleChange(
+												"series_order",
+												e.target.value ? parseInt(e.target.value, 10) : null,
+											)
+										}
+									/>
+								</div>
+							)}
+
+							{/* Create new series inline */}
+							{!showNewSeries ? (
+								<button
+									type="button"
+									onClick={() => setShowNewSeries(true)}
+									className="flex items-center gap-1.5 font-mono text-[0.65rem] text-text-tertiary transition-colors hover:text-accent"
+								>
+									<Plus size={10} />
+									Create new series
+								</button>
+							) : (
+								<div className="flex flex-col gap-2 rounded-md border border-border-subtle bg-bg-elevated p-3">
+									<input
+										type="text"
+										className="input h-8 text-sm"
+										placeholder="Series title..."
+										value={newSeriesTitle}
+										onChange={(e) => setNewSeriesTitle(e.target.value)}
+										onKeyDown={(e) => {
+											if (e.key === "Enter") {
+												e.preventDefault();
+												handleCreateSeries();
+											}
+										}}
+										autoFocus
+									/>
+									<div className="flex gap-2">
+										<button
+											type="button"
+											className="btn-primary h-7 flex-1 text-[0.65rem]"
+											onClick={handleCreateSeries}
+											disabled={
+												!newSeriesTitle.trim() || createSeriesMutation.isPending
+											}
+										>
+											{createSeriesMutation.isPending ? (
+												<Loader2 size={10} className="animate-spin" />
+											) : (
+												"Create"
+											)}
+										</button>
+										<button
+											type="button"
+											className="btn-ghost h-7 flex-1 text-[0.65rem]"
+											onClick={() => {
+												setShowNewSeries(false);
+												setNewSeriesTitle("");
+											}}
+										>
+											Cancel
+										</button>
+									</div>
+								</div>
+							)}
 						</div>
 
 						{/* Tags */}

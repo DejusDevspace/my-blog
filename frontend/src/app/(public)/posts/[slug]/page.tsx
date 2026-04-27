@@ -22,7 +22,7 @@ export async function generateMetadata({
 				title: post.title,
 				description: post.excerpt || undefined,
 				type: "article",
-				publishedTime: post.published_at,
+				publishedTime: post.published_at ?? undefined,
 				tags: post.tags?.map((t) => t.name) || [],
 			},
 		};
