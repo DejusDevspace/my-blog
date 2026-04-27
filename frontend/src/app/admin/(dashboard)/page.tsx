@@ -16,6 +16,7 @@ import {
 	Plus,
 	EyeIcon,
 	TrashIcon,
+	PenIcon,
 } from "lucide-react";
 
 export default function AdminDashboardPage() {
@@ -254,18 +255,24 @@ export default function AdminDashboardPage() {
 											) : (
 												<div className="flex items-center justify-end gap-2">
 													<Link
-														href={`/admin/posts/${post.id}/edit`}
+														href={`/posts/${post.slug}`}
 														className="cursor-pointer border-none bg-transparent p-1 text-text-tertiary transition-colors hover:text-text-primary"
 													>
-														<EyeIcon size={16} />
+														<EyeIcon size={16} aria-label="View" />
+													</Link>
+													<Link
+														href={`/admin/posts/${post.id}/edit`}
+														className="cursor-pointer border-none bg-transparent p-1 text-text-tertiary transition-colors hover:text-accent-hover"
+													>
+														<PenIcon size={16} aria-label="Edit" />
 													</Link>
 													<button
-														className="cursor-pointer border-none bg-transparent p-1 text-text-tertiary transition-colors hover:text-text-primary"
+														className="cursor-pointer border-none bg-transparent p-1 text-text-tertiary transition-colors hover:text-danger"
 														onClick={() => {
 															// Handle delete action
 														}}
 													>
-														<TrashIcon size={16} />
+														<TrashIcon size={16} aria-label="Delete" />
 													</button>
 												</div>
 											)}
@@ -290,7 +297,7 @@ export default function AdminDashboardPage() {
 								disabled={page === 1}
 								onClick={() => setPage((p) => Math.max(1, p - 1))}
 							>
-								<ChevronLeft size={14} />
+								<ChevronLeft size={14} aria-label="Previous" />
 							</button>
 							<button className="flex h-7 w-7 items-center justify-center rounded-md border border-accent bg-accent-muted font-bold text-accent">
 								{page}
@@ -300,7 +307,7 @@ export default function AdminDashboardPage() {
 								disabled={page >= (postsData?.pages || 1)}
 								onClick={() => setPage((p) => p + 1)}
 							>
-								<ChevronRight size={14} />
+								<ChevronRight size={14} aria-label="Next" />
 							</button>
 						</div>
 					</div>
