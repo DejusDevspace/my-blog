@@ -11,7 +11,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.post import Post, PostTag, Tag
+from app.models.series import Series
+from app.models.category import Category
 from app.schemas.post import PostCreate, PostUpdate
+
 
 # Average reading speed in words per minute.
 _WORDS_PER_MINUTE = 200
@@ -73,6 +76,7 @@ async def list_published_posts(
     *,
     category_slug: str | None = None,
     tag_slug: str | None = None,
+    series_slug: str | None = None,
     page: int = 1,
     limit: int = 10,
 ) -> tuple[list[Post], int]:
@@ -92,8 +96,6 @@ async def list_published_posts(
     )
 
     if category_slug:
-        from app.models.category import Category
-
         query = query.join(Post.category).where(Category.slug == category_slug)
         count_query = (
             count_query.join(Post.category).where(Category.slug == category_slug)
@@ -102,6 +104,12 @@ async def list_published_posts(
     if tag_slug:
         query = query.join(Post.tags).where(Tag.slug == tag_slug)
         count_query = count_query.join(Post.tags).where(Tag.slug == tag_slug)
+
+    if series_slug:
+        query = query.join(Post.series).where(Series.slug == series_slug)
+        count_query = count_query.join(Post.series).where(
+            Series.slug == series_slug
+        )
 
     total = (await db.execute(count_query)).scalar() or 0
     offset = (page - 1) * limit
