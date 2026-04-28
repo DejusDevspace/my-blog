@@ -117,7 +117,7 @@ export default function HomeFeedClient() {
 	}
 
 	return (
-		<div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 lg:flex-row lg:px-8">
+		<div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 pb-5 lg:py-12 lg:flex-row lg:px-8">
 			<div className="sticky top-24 h-full">
 				<FilterSidebar
 					activeCategory={activeCategory}
