@@ -18,6 +18,7 @@ import {
 	TrashIcon,
 	PenIcon,
 } from "lucide-react";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 export default function AdminDashboardPage() {
 	const [page, setPage] = useState(1);
@@ -153,30 +154,31 @@ export default function AdminDashboardPage() {
 						</div>
 
 						{/* Status Filter */}
-						<select
-							className="rounded-md border border-border-subtle bg-bg-elevated px-3 py-1.5 font-mono text-xs text-text-secondary outline-none transition-colors focus:border-accent"
+						<CustomSelect
 							value={statusFilter}
-							onChange={(e) => setStatusFilter(e.target.value)}
-						>
-							<option value="All">Status: All</option>
-							<option value="Published">Published</option>
-							<option value="Draft">Draft</option>
-							<option value="Agent_Draft">Agent Draft</option>
-						</select>
+							onChange={setStatusFilter}
+							className="min-w-40"
+							options={[
+								{ value: "All", label: "Status: All" },
+								{ value: "Published", label: "Published" },
+								{ value: "Draft", label: "Draft" },
+								{ value: "Agent_Draft", label: "Agent Draft" },
+							]}
+						/>
 
 						{/* Category Filter */}
-						<select
-							className="rounded-md border border-border-subtle bg-bg-elevated px-3 py-1.5 font-mono text-xs text-text-secondary outline-none transition-colors focus:border-accent"
+						<CustomSelect
 							value={categoryFilter}
-							onChange={(e) => setCategoryFilter(e.target.value)}
-						>
-							<option value="All">Category: All</option>
-							{categories?.map((cat) => (
-								<option key={cat.id} value={cat.name}>
-									{cat.name}
-								</option>
-							))}
-						</select>
+							onChange={setCategoryFilter}
+							className="min-w-40"
+							options={[
+								{ value: "All", label: "Category: All" },
+								...(categories?.map((cat) => ({
+									value: cat.name,
+									label: cat.name,
+								})) || []),
+							]}
+						/>
 					</div>
 				</div>
 

@@ -22,6 +22,7 @@ import {
 } from "@/hooks/useApi";
 import type { PostStatus } from "@/types";
 import TagSelector from "./TagSelector";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 // Dynamically import BlockNote to avoid SSR issues
 const BlockNoteEditor = dynamic(() => import("./BlockNoteEditor"), {
@@ -349,20 +350,17 @@ export default function PostEditorClient({
 							<label className="font-mono text-xs font-bold uppercase tracking-widest text-text-tertiary">
 								Category
 							</label>
-							<select
-								className="input h-10 w-full cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5YWEzYjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=')] bg-size-16px bg-position[right_12px_center] bg-no-repeat pr-10"
+							<CustomSelect
+								placeholder="Select category..."
 								value={data.category_id}
-								onChange={(e) => handleChange("category_id", e.target.value)}
-							>
-								<option value="" disabled>
-									Select category...
-								</option>
-								{categories?.map((cat) => (
-									<option key={cat.id} value={cat.id}>
-										{cat.name}
-									</option>
-								))}
-							</select>
+								onChange={(val) => handleChange("category_id", val)}
+								options={
+									categories?.map((cat) => ({
+										value: cat.id,
+										label: cat.name,
+									})) || []
+								}
+							/>
 						</div>
 
 						{/* Series */}
@@ -373,24 +371,21 @@ export default function PostEditorClient({
 									Series
 								</span>
 							</label>
-							<select
-								className="input h-10 w-full cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5YWEzYjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=')] bg-size-16px bg-position[right_12px_center] bg-no-repeat pr-10"
-								value={data.series_id}
-								onChange={(e) => {
-									handleChange("series_id", e.target.value);
-									// Reset order when changing series
-									if (!e.target.value) {
-										handleChange("series_order", null);
-									}
+							<CustomSelect
+								placeholder="No series"
+								value={data.series_id || ""}
+								onChange={(val) => {
+									handleChange("series_id", val || null);
+									if (!val) handleChange("series_order", null);
 								}}
-							>
-								<option value="">No series</option>
-								{seriesList?.map((s) => (
-									<option key={s.id} value={s.id}>
-										{s.title} ({s.post_count} posts)
-									</option>
-								))}
-							</select>
+								options={[
+									{ value: "", label: "No series" },
+									...(seriesList?.map((s) => ({
+										value: s.id,
+										label: `${s.title} (${s.post_count} posts)`,
+									})) || []),
+								]}
+							/>
 
 							{/* Series order — only shown when a series is selected */}
 							{data.series_id && (
