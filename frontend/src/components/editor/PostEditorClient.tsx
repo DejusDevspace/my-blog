@@ -21,6 +21,7 @@ import {
 	useAdminCreateSeries,
 } from "@/hooks/useApi";
 import type { PostStatus } from "@/types";
+import TagSelector from "./TagSelector";
 
 // Dynamically import BlockNote to avoid SSR issues
 const BlockNoteEditor = dynamic(() => import("./BlockNoteEditor"), {
@@ -72,7 +73,6 @@ export default function PostEditorClient({
 	const [isSaving, setIsSaving] = useState(false);
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 	const [sidebarOpen, setSidebarOpen] = useState(false); // For mobile
-	const [tagInput, setTagInput] = useState("");
 	const [showNewSeries, setShowNewSeries] = useState(false);
 	const [newSeriesTitle, setNewSeriesTitle] = useState("");
 
@@ -135,17 +135,6 @@ export default function PostEditorClient({
 	const handleChange = (field: keyof EditorData, value: any) => {
 		setData((prev) => ({ ...prev, [field]: value }));
 		setHasUnsavedChanges(true);
-	};
-
-	const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter" || e.key === ",") {
-			e.preventDefault();
-			const newTag = tagInput.trim();
-			if (newTag && !data.tag_names.includes(newTag)) {
-				handleChange("tag_names", [...data.tag_names, newTag]);
-			}
-			setTagInput("");
-		}
 	};
 
 	const handleRemoveTag = (tagToRemove: string) => {
@@ -268,14 +257,14 @@ export default function PostEditorClient({
 					</button>
 
 					<button
-						className="btn-ghost"
+						className="btn-ghost cursor-pointer"
 						onClick={handleSaveDraft}
 						disabled={isSaving}
 					>
 						Save draft
 					</button>
 					<button
-						className="btn-primary"
+						className="btn-primary cursor-pointer"
 						onClick={handlePublish}
 						disabled={isSaving}
 					>
@@ -482,35 +471,15 @@ export default function PostEditorClient({
 						</div>
 
 						{/* Tags */}
-						<div className="flex flex-col gap-2">
-							<label className="font-mono text-xs font-bold uppercase tracking-widest text-text-tertiary">
-								Tags
-							</label>
-							<div className="flex flex-wrap gap-2 mb-2">
-								{data.tag_names.map((tag) => (
-									<span
-										key={tag}
-										className="inline-flex items-center gap-1 rounded-md bg-bg-subtle px-2 py-1 font-mono text-xs text-text-secondary"
-									>
-										{tag}
-										<button
-											onClick={() => handleRemoveTag(tag)}
-											className="text-text-tertiary hover:text-danger"
-										>
-											<X size={12} />
-										</button>
-									</span>
-								))}
-							</div>
-							<input
-								type="text"
-								className="input"
-								placeholder="Add tag... (press Enter)"
-								value={tagInput}
-								onChange={(e) => setTagInput(e.target.value)}
-								onKeyDown={handleAddTag}
-							/>
-						</div>
+						<TagSelector
+							selectedTags={data.tag_names}
+							onAddTag={(tag) => {
+								if (!data.tag_names.includes(tag)) {
+									handleChange("tag_names", [...data.tag_names, tag]);
+								}
+							}}
+							onRemoveTag={handleRemoveTag}
+						/>
 
 						{/* Slug */}
 						<div className="flex flex-col gap-2">
