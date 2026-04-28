@@ -155,7 +155,7 @@ export interface PostCreate {
   title: string;
   content: string;
   category_id: string;
-  tag_ids?: string[];
+  tags?: string[];
   series_id?: string | null;
   series_order?: number | null;
   status?: "draft" | "published";
@@ -166,7 +166,7 @@ export interface PostUpdate {
   slug?: string | null;
   content?: string | null;
   category_id?: string | null;
-  tag_ids?: string[] | null;
+  tags?: string[] | null;
   series_id?: string | null;
   series_order?: number | null;
   status?: PostStatus | null;
