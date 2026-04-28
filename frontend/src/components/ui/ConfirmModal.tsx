@@ -87,7 +87,7 @@ export default function ConfirmModal({
 					<button
 						type="button"
 						onClick={onClose}
-						className="rounded-md px-4 py-2 font-mono text-xs font-bold text-text-tertiary transition-colors hover:bg-bg-elevated hover:text-text-primary"
+						className="rounded-md px-4 py-2 cursor-pointer font-mono text-xs font-bold text-text-tertiary transition-colors hover:bg-bg-elevated hover:text-text-primary"
 					>
 						{cancelText}
 					</button>
@@ -97,7 +97,7 @@ export default function ConfirmModal({
 							onConfirm();
 							onClose();
 						}}
-						className={`rounded-md border px-5 py-2 font-mono text-xs font-bold transition-all active:scale-95 ${variantStyles[variant]}`}
+						className={`rounded-md border px-5 py-2 cursor-pointer font-mono text-xs font-bold transition-all active:scale-95 ${variantStyles[variant]}`}
 					>
 						{confirmText}
 					</button>
