@@ -6,14 +6,15 @@ import uuid
 from datetime import datetime
 
 from slugify import slugify
-from sqlalchemy import func, select
+from fastapi import HTTPException, status
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import selectinload
 
 from app.models.post import Post, PostTag, Tag
 from app.models.series import Series
 from app.models.category import Category
 from app.schemas.post import PostCreate, PostUpdate
+from app.services import tag_service
 
 
 # Average reading speed in words per minute.
@@ -196,9 +197,10 @@ async def create_post(
     await db.flush()
 
     # Attach tags.
-    if data.tag_ids:
-        for tag_id in data.tag_ids:
-            db.add(PostTag(id=uuid.uuid4(), post_id=post.id, tag_id=tag_id))
+    if data.tags:
+        for name in data.tags:
+            tag = await tag_service.get_or_create_tag(db, name, owner_id)
+            db.add(PostTag(id=uuid.uuid4(), post_id=post.id, tag_id=tag.id))
         await db.flush()
 
     # Refresh to load relationships for the response.
@@ -234,8 +236,6 @@ async def update_post(
             select(Post.id).where(Post.slug == slug_val, Post.id != post_id)
         )
         if existing.scalar_one_or_none() is not None:
-            from fastapi import HTTPException, status
-
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail=f"Slug '{slug_val}' is already in use.",
@@ -255,17 +255,13 @@ async def update_post(
             update_data["published_at"] = datetime.now()
 
     # Handle tag reassignment.
-    tag_ids = update_data.pop("tag_ids", None)
-    if tag_ids is not None:
+    tags = update_data.pop("tags", None)
+    if tags is not None:
         # Remove existing associations.
-        await db.execute(
-            select(PostTag).where(PostTag.post_id == post_id)
-        )
-        from sqlalchemy import delete
-
         await db.execute(delete(PostTag).where(PostTag.post_id == post_id))
-        for tag_id in tag_ids:
-            db.add(PostTag(id=uuid.uuid4(), post_id=post_id, tag_id=tag_id))
+        for name in tags:
+            tag = await tag_service.get_or_create_tag(db, name, post.owner_id)
+            db.add(PostTag(id=uuid.uuid4(), post_id=post_id, tag_id=tag.id))
 
     for field, value in update_data.items():
         setattr(post, field, value)
