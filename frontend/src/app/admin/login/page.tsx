@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { Lock, AtSign, Key, Eye, EyeOff, ArrowRight } from "lucide-react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function AdminLoginPage() {
 	const router = useRouter();
@@ -11,8 +12,9 @@ export default function AdminLoginPage() {
 	const [password, setPassword] = useState("");
 	const [showPassword, setShowPassword] = useState(false);
 	const [error, setError] = useState("");
+	const [isLoading, setIsLoading] = useState(false);
 
-	const handleLogin = async (e: React.SubmitEvent) => {
+	const handleLogin = async (e: React.FormEvent) => {
 		e.preventDefault();
 		setError("");
 
@@ -21,17 +23,25 @@ export default function AdminLoginPage() {
 			return;
 		}
 
-		const result = await signIn("credentials", {
-			redirect: false,
-			email,
-			password,
-		});
+		setIsLoading(true);
 
-		if (result?.error) {
-			setError("Invalid credentials. Access denied.");
-		} else {
-			router.push("/admin");
-			router.refresh(); // Refresh to trigger server-side layout protection check
+		try {
+			const result = await signIn("credentials", {
+				redirect: false,
+				email,
+				password,
+			});
+
+			if (result?.error) {
+				setError("Invalid credentials. Access denied.");
+				setIsLoading(false);
+			} else {
+				router.push("/admin");
+				router.refresh();
+			}
+		} catch (err) {
+			setError("An unexpected error occurred.");
+			setIsLoading(false);
 		}
 	};
 
@@ -126,12 +136,12 @@ export default function AdminLoginPage() {
 							</div>
 						)}
 
-						{/* Submit Button */}
 						<button
 							type="submit"
-							className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-accent-border bg-accent-muted p-3 font-mono text-(length:--text-body-sm) font-medium text-accent transition-all duration-150 hover:bg-accent-border hover:shadow-[0_0_12px_rgba(0,229,255,0.2)] active:translate-y-px"
+							disabled={isLoading}
+							className="mt-2 flex w-full cursor-pointer items-center justify-center gap-2 rounded-md border border-accent-border bg-accent-muted p-3 font-mono text-(length:--text-body-sm) font-medium text-accent transition-all duration-150 hover:bg-accent-border hover:shadow-[0_0_12px_rgba(0,229,255,0.2)] active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50"
 						>
-							<span>Sign in</span>
+							<span>{isLoading ? "Signing In..." : "Sign in"}</span>
 							<ArrowRight size={16} />
 						</button>
 					</form>

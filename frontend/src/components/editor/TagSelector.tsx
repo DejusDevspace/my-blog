@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { Search, X, Check, Plus, Tag as TagIcon, Loader2 } from "lucide-react";
+import { Search, X, Check, Plus, Tag as TagIcon } from "lucide-react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import { useTags } from "@/hooks/useApi";
 
 interface TagSelectorProps {
@@ -138,7 +139,7 @@ export default function TagSelector({
 				<div className="group relative">
 					<div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-tertiary group-focus-within:text-accent transition-colors">
 						{isLoading ? (
-							<Loader2 size={14} className="animate-spin" />
+							<LoadingSpinner size="sm" inline />
 						) : (
 							<Search size={14} />
 						)}
@@ -167,7 +168,7 @@ export default function TagSelector({
 					<div className="absolute top-full left-0 right-0 z-50 mt-2 max-h-60 overflow-y-auto rounded-lg border border-border-default bg-bg-surface p-1 shadow-xl shadow-black/50 animate-in fade-in zoom-in duration-200">
 						{isLoading ? (
 							<div className="flex items-center justify-center p-4 text-text-tertiary font-mono text-xs">
-								<Loader2 size={12} className="mr-2 animate-spin" />
+								<LoadingSpinner size="sm" inline />
 								Loading tags...
 							</div>
 						) : (

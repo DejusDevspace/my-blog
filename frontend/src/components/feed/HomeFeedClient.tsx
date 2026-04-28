@@ -8,7 +8,8 @@ import FilterSidebar from "./FilterSidebar";
 import MobileFilterBar from "./MobileFilterBar";
 import PostCard from "./PostCard";
 import type { PostListItem } from "@/types";
-import { FileText, FilterX, Loader2 } from "lucide-react";
+import { FileText, FilterX } from "lucide-react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function HomeFeedClient() {
 	const searchParams = useSearchParams();
@@ -201,7 +202,7 @@ export default function HomeFeedClient() {
 								>
 									{isFetching ? (
 										<>
-											<Loader2 className="h-4 w-4 animate-spin" /> Loading...
+											<LoadingSpinner size="sm" label="Loading..." />
 										</>
 									) : (
 										"Load More"
