@@ -158,7 +158,7 @@ export default function HomeFeedClient() {
 						</span>
 						<button
 							onClick={() => router.push("/")}
-							className="flex items-center gap-1 font-mono text-[0.65rem] uppercase text-text-tertiary hover:text-danger transition-colors"
+							className="flex items-center gap-1 font-mono text-[0.65rem] uppercase text-text-tertiary cursor-pointer hover:text-danger transition-colors"
 						>
 							<FilterX className="h-3 w-3" />
 							Clear
