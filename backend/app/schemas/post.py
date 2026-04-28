@@ -31,7 +31,7 @@ class PostCreate(BaseModel):
     title: str = Field(..., min_length=1, max_length=300)
     content: str = Field(..., min_length=1)
     category_id: uuid.UUID
-    tag_ids: list[uuid.UUID] = Field(default_factory=list)
+    tags: list[str] = Field(default_factory=list)
     series_id: uuid.UUID | None = None
     series_order: int | None = Field(None, ge=1)
     status: str = Field(default="draft", pattern=r"^(draft|published)$")
@@ -44,7 +44,7 @@ class PostUpdate(BaseModel):
     slug: str | None = Field(None, min_length=1, max_length=350)
     content: str | None = Field(None, min_length=1)
     category_id: uuid.UUID | None = None
-    tag_ids: list[uuid.UUID] | None = None
+    tags: list[str] | None = None
     series_id: uuid.UUID | None = None
     series_order: int | None = Field(None, ge=1)
     status: str | None = Field(
