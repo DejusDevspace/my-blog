@@ -118,14 +118,16 @@ export default function HomeFeedClient() {
 
 	return (
 		<div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 lg:flex-row lg:px-8">
-			<FilterSidebar
-				activeCategory={activeCategory}
-				activeTag={activeTag}
-				activeSeries={activeSeries}
-				onCategoryChange={(cat) => updateFilter("category", cat)}
-				onTagChange={(tag) => updateFilter("tag", tag)}
-				onSeriesChange={(series) => updateFilter("series", series)}
-			/>
+			<div className="sticky top-24 h-full">
+				<FilterSidebar
+					activeCategory={activeCategory}
+					activeTag={activeTag}
+					activeSeries={activeSeries}
+					onCategoryChange={(cat) => updateFilter("category", cat)}
+					onTagChange={(tag) => updateFilter("tag", tag)}
+					onSeriesChange={(series) => updateFilter("series", series)}
+				/>
+			</div>
 
 			<div className="flex-1">
 				<HeroSection totalPosts={data?.total || 0} />
