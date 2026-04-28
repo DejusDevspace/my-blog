@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useAdminPosts, useAdminCategories } from "@/hooks/useApi";
+import {
+	useAdminPosts,
+	useAdminCategories,
+	useAdminDeletePost,
+} from "@/hooks/useApi";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
 	Database,
@@ -19,12 +23,21 @@ import {
 	PenIcon,
 } from "lucide-react";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { useToast } from "@/hooks/useToast";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 export default function AdminDashboardPage() {
 	const [page, setPage] = useState(1);
 	const [statusFilter, setStatusFilter] = useState("All");
 	const [categoryFilter, setCategoryFilter] = useState("All");
 	const [searchQuery, setSearchQuery] = useState("");
+	const [postToDelete, setPostToDelete] = useState<{
+		id: string;
+		title: string;
+	} | null>(null);
+
+	const toast = useToast();
+	const deletePostMutation = useAdminDeletePost();
 
 	const { data: postsData, isLoading: isLoadingPosts } = useAdminPosts({
 		page,
@@ -54,6 +67,20 @@ export default function AdminDashboardPage() {
 			categoryFilter === "All" || post.category.name === categoryFilter;
 		return matchesSearch && matchesCategory;
 	});
+
+	const handleDelete = async () => {
+		if (!postToDelete) return;
+
+		try {
+			await deletePostMutation.mutateAsync(postToDelete.id);
+			toast.success(`Post "${postToDelete.title}" deleted`);
+		} catch (error) {
+			console.error("Delete failed", error);
+			toast.error("Failed to delete post");
+		} finally {
+			setPostToDelete(null);
+		}
+	};
 
 	return (
 		<div className="flex flex-col gap-8 p-6 lg:p-10">
@@ -270,9 +297,12 @@ export default function AdminDashboardPage() {
 													</Link>
 													<button
 														className="cursor-pointer border-none bg-transparent p-1 text-text-tertiary transition-colors hover:text-danger"
-														onClick={() => {
-															// Handle delete action
-														}}
+														onClick={() =>
+															setPostToDelete({
+																id: post.id,
+																title: post.title,
+															})
+														}
 													>
 														<TrashIcon size={16} aria-label="Delete" />
 													</button>
@@ -315,6 +345,17 @@ export default function AdminDashboardPage() {
 					</div>
 				)}
 			</div>
+
+			{/* Deletion Confirmation Modal */}
+			<ConfirmModal
+				isOpen={!!postToDelete}
+				onClose={() => setPostToDelete(null)}
+				onConfirm={handleDelete}
+				title="Delete Post"
+				message={`Are you sure you want to delete "${postToDelete?.title}"? This action cannot be undone.`}
+				confirmText="Delete"
+				variant="danger"
+			/>
 		</div>
 	);
 }

@@ -23,6 +23,8 @@ import {
 import type { PostStatus } from "@/types";
 import TagSelector from "./TagSelector";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { useToast } from "@/hooks/useToast";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 // Dynamically import BlockNote to avoid SSR issues
 const BlockNoteEditor = dynamic(() => import("./BlockNoteEditor"), {
@@ -74,8 +76,11 @@ export default function PostEditorClient({
 	const [isSaving, setIsSaving] = useState(false);
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 	const [sidebarOpen, setSidebarOpen] = useState(false); // For mobile
+	const [showPublishModal, setShowPublishModal] = useState(false);
 	const [showNewSeries, setShowNewSeries] = useState(false);
 	const [newSeriesTitle, setNewSeriesTitle] = useState("");
+
+	const toast = useToast();
 
 	const { data: categories } = useAdminCategories();
 	const { data: seriesList } = useAdminSeries();
@@ -169,34 +174,42 @@ export default function PostEditorClient({
 				? "draft-new"
 				: `draft-${initialData.slug || "edit"}`;
 			localStorage.removeItem(DRAFT_KEY);
+			toast.success("Draft saved successfully");
 		} catch (error) {
 			console.error("Save failed", error);
-			alert("Failed to save draft.");
+			toast.error("Failed to save draft.");
 		} finally {
 			setIsSaving(false);
 		}
 	};
 
-	const handlePublish = async () => {
-		if (window.confirm("Publish this post? It will be visible immediately.")) {
-			setIsSaving(true);
-			try {
-				if (onPublish) {
-					await onPublish({ ...data, status: "published" });
-				} else {
-					await onSave({ ...data, status: "published" });
-				}
-				setHasUnsavedChanges(false);
-				const DRAFT_KEY = isNew
-					? "draft-new"
-					: `draft-${initialData.slug || "edit"}`;
-				localStorage.removeItem(DRAFT_KEY);
-			} catch (error) {
-				console.error("Publish failed", error);
-				alert("Failed to publish post.");
-			} finally {
-				setIsSaving(false);
+	const handlePublish = () => {
+		setShowPublishModal(true);
+	};
+
+	const confirmPublish = async () => {
+		setIsSaving(true);
+		try {
+			if (onPublish) {
+				await onPublish({ ...data, status: "published" });
+			} else {
+				await onSave({ ...data, status: "published" });
 			}
+			setHasUnsavedChanges(false);
+			const DRAFT_KEY = isNew
+				? "draft-new"
+				: `draft-${initialData.slug || "edit"}`;
+			localStorage.removeItem(DRAFT_KEY);
+			toast.success(
+				data.status === "published"
+					? "Post updated successfully"
+					: "Post published successfully!",
+			);
+		} catch (error) {
+			console.error("Publish failed", error);
+			toast.error("Failed to publish post.");
+		} finally {
+			setIsSaving(false);
 		}
 	};
 
@@ -527,6 +540,19 @@ export default function PostEditorClient({
 					/>
 				)}
 			</div>
+			{/* Confirmation Modals */}
+			<ConfirmModal
+				isOpen={showPublishModal}
+				onClose={() => setShowPublishModal(false)}
+				onConfirm={confirmPublish}
+				title={data.status === "published" ? "Update Post" : "Publish Post"}
+				message={
+					data.status === "published"
+						? "Are you sure you want to update this post? The changes will be live immediately."
+						: "Are you sure you want to publish this post? It will be visible to the public immediately."
+				}
+				confirmText={data.status === "published" ? "Update" : "Publish"}
+			/>
 		</div>
 	);
 }
