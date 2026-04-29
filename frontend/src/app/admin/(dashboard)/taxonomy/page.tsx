@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useAdminCategories, useTags } from "@/hooks/useApi";
+import {
+	useAdminCategories,
+	useTags,
+	useAdminCreateCategory,
+	useAdminUpdateCategory,
+	useAdminDeleteCategory,
+	useAdminCreateTag,
+	useAdminUpdateTag,
+	useAdminDeleteTag,
+} from "@/hooks/useApi";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
 	Plus,
@@ -15,7 +24,6 @@ import {
 } from "lucide-react";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { useToast } from "@/hooks/useToast";
-// TODO: import mutation hooks when added to useApi.ts
 
 export default function TaxonomyPage() {
 	const [activeTab, setActiveTab] = useState<"categories" | "tags">(
@@ -45,15 +53,64 @@ export default function TaxonomyPage() {
 		setCurrentPage(1);
 	}, [searchQuery, activeTab]);
 
-	// Handlers will be implemented once API is hooked up
-	const handleSave = () => {
-		toast.info("Save functionality coming soon");
-		setIsModalOpen(false);
+	const createCategory = useAdminCreateCategory();
+	const updateCategory = useAdminUpdateCategory();
+	const deleteCategory = useAdminDeleteCategory();
+
+	const createTag = useAdminCreateTag();
+	const updateTag = useAdminUpdateTag();
+	const deleteTag = useAdminDeleteTag();
+
+	const handleSave = async () => {
+		if (!editingItem?.name.trim()) return;
+
+		try {
+			if (activeTab === "categories") {
+				if (editingItem.id) {
+					await updateCategory.mutateAsync({
+						categoryId: editingItem.id,
+						payload: { name: editingItem.name },
+					});
+					toast.success("Category updated successfully");
+				} else {
+					await createCategory.mutateAsync({ name: editingItem.name });
+					toast.success("Category created successfully");
+				}
+			} else {
+				if (editingItem.id) {
+					await updateTag.mutateAsync({
+						tagId: editingItem.id,
+						payload: { name: editingItem.name },
+					});
+					toast.success("Tag updated successfully");
+				} else {
+					await createTag.mutateAsync({ name: editingItem.name });
+					toast.success("Tag created successfully");
+				}
+			}
+			setIsModalOpen(false);
+		} catch (error: any) {
+			toast.error(error.message || `Failed to save ${activeTab.slice(0, -1)}`);
+		}
 	};
 
-	const handleDelete = () => {
-		toast.info("Delete functionality coming soon");
-		setItemToDelete(null);
+	const handleDelete = async () => {
+		if (!itemToDelete) return;
+
+		try {
+			if (activeTab === "categories") {
+				await deleteCategory.mutateAsync(itemToDelete.id);
+				toast.success("Category deleted successfully");
+			} else {
+				await deleteTag.mutateAsync(itemToDelete.id);
+				toast.success("Tag deleted successfully");
+			}
+			setItemToDelete(null);
+		} catch (error: any) {
+			toast.error(
+				error.message || `Failed to delete ${activeTab.slice(0, -1)}`,
+			);
+		}
 	};
 
 	const openCreateModal = () => {
@@ -328,10 +385,21 @@ export default function TaxonomyPage() {
 								</button>
 								<button
 									onClick={handleSave}
-									className="btn-primary cursor-pointer"
-									disabled={!editingItem?.name.trim()}
+									className="btn-primary cursor-pointer flex items-center gap-2"
+									disabled={
+										!editingItem?.name.trim() ||
+										createCategory.isPending ||
+										updateCategory.isPending ||
+										createTag.isPending ||
+										updateTag.isPending
+									}
 								>
-									Save
+									{createCategory.isPending ||
+									updateCategory.isPending ||
+									createTag.isPending ||
+									updateTag.isPending
+										? "Saving..."
+										: "Save"}
 								</button>
 							</div>
 						</div>

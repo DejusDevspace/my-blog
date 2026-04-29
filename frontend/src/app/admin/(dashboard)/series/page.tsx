@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { useAdminSeries } from "@/hooks/useApi";
+import {
+	useAdminSeries,
+	useAdminCreateSeries,
+	useAdminUpdateSeries,
+	useAdminDeleteSeries,
+} from "@/hooks/useApi";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
 	Plus,
@@ -14,7 +19,6 @@ import {
 } from "lucide-react";
 import ConfirmModal from "@/components/ui/ConfirmModal";
 import { useToast } from "@/hooks/useToast";
-// TODO: import mutation hooks when added to useApi.ts
 
 export default function SeriesPage() {
 	const toast = useToast();
@@ -58,15 +62,46 @@ export default function SeriesPage() {
 		currentPage * ITEMS_PER_PAGE,
 	);
 
-	// Handlers will be implemented once API is hooked up
-	const handleSave = () => {
-		toast.info("Save functionality coming soon");
-		setIsModalOpen(false);
+	const createSeries = useAdminCreateSeries();
+	const updateSeries = useAdminUpdateSeries();
+	const deleteSeries = useAdminDeleteSeries();
+
+	const handleSave = async () => {
+		if (!editingItem?.title.trim()) return;
+
+		try {
+			if (editingItem.id) {
+				await updateSeries.mutateAsync({
+					seriesId: editingItem.id,
+					payload: {
+						title: editingItem.title,
+						description: editingItem.description || null,
+					},
+				});
+				toast.success("Series updated successfully");
+			} else {
+				await createSeries.mutateAsync({
+					title: editingItem.title,
+					description: editingItem.description || null,
+				});
+				toast.success("Series created successfully");
+			}
+			setIsModalOpen(false);
+		} catch (error: any) {
+			toast.error(error.message || "Failed to save series");
+		}
 	};
 
-	const handleDelete = () => {
-		toast.info("Delete functionality coming soon");
-		setItemToDelete(null);
+	const handleDelete = async () => {
+		if (!itemToDelete) return;
+
+		try {
+			await deleteSeries.mutateAsync(itemToDelete.id);
+			toast.success("Series deleted successfully");
+			setItemToDelete(null);
+		} catch (error: any) {
+			toast.error(error.message || "Failed to delete series");
+		}
 	};
 
 	const openCreateModal = () => {
@@ -308,10 +343,16 @@ export default function SeriesPage() {
 								</button>
 								<button
 									onClick={handleSave}
-									className="btn-primary cursor-pointer"
-									disabled={!editingItem?.title.trim()}
+									className="btn-primary cursor-pointer flex items-center gap-2"
+									disabled={
+										!editingItem?.title.trim() ||
+										createSeries.isPending ||
+										updateSeries.isPending
+									}
 								>
-									Save
+									{createSeries.isPending || updateSeries.isPending
+										? "Saving..."
+										: "Save"}
 								</button>
 							</div>
 						</div>

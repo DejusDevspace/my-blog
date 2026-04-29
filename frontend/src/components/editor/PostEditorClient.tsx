@@ -264,7 +264,7 @@ export default function PostEditorClient({
 					</div>
 
 					<button
-						className="btn-ghost flex items-center lg:hidden"
+						className="btn-ghost cursor-pointer flex items-center lg:hidden"
 						onClick={() => setSidebarOpen(!sidebarOpen)}
 					>
 						<SlidersHorizontal size={16} />

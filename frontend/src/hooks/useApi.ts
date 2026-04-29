@@ -17,6 +17,8 @@ import {
 import type {
   ApiError,
   Category,
+  CategoryCreate,
+  CategoryUpdate,
   Comment,
   CommentCreate,
   MessageResponse,
@@ -28,7 +30,10 @@ import type {
   SeriesCreate,
   SeriesListItem,
   SeriesResponse,
+  SeriesUpdate,
   Tag,
+  TagCreate,
+  TagUpdate,
 } from "@/types";
 import * as api from "@/services/api";
 import type { ListPostsParams, AdminListPostsParams } from "@/services/api";
@@ -270,6 +275,57 @@ export function useAdminCategories(
   });
 }
 
+/** (Admin) Create a category. */
+export function useAdminCreateCategory(
+  options?: UseMutationOptions<Category, ApiError, CategoryCreate>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<Category, ApiError, CategoryCreate>({
+    mutationFn: api.adminCreateCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Update a category. */
+export function useAdminUpdateCategory(
+  options?: UseMutationOptions<
+    Category,
+    ApiError,
+    { categoryId: string; payload: CategoryUpdate }
+  >,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    Category,
+    ApiError,
+    { categoryId: string; payload: CategoryUpdate }
+  >({
+    mutationFn: ({ categoryId, payload }) =>
+      api.adminUpdateCategory(categoryId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Delete a category. */
+export function useAdminDeleteCategory(
+  options?: UseMutationOptions<MessageResponse, ApiError, string>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<MessageResponse, ApiError, string>({
+    mutationFn: api.adminDeleteCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories.all });
+    },
+    ...options,
+  });
+}
+
 /* ============================================================================
   Admin — Series
 ============================================================================ */
@@ -297,6 +353,114 @@ export function useAdminCreateSeries(
         queryKey: queryKeys.admin.series.all,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Update a series. */
+export function useAdminUpdateSeries(
+  options?: UseMutationOptions<
+    SeriesResponse,
+    ApiError,
+    { seriesId: string; payload: SeriesUpdate }
+  >,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SeriesResponse,
+    ApiError,
+    { seriesId: string; payload: SeriesUpdate }
+  >({
+    mutationFn: ({ seriesId, payload }) =>
+      api.adminUpdateSeries(seriesId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.series.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Delete a series. */
+export function useAdminDeleteSeries(
+  options?: UseMutationOptions<MessageResponse, ApiError, string>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<MessageResponse, ApiError, string>({
+    mutationFn: api.adminDeleteSeries,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.series.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+    },
+    ...options,
+  });
+}
+
+/* ============================================================================
+  Admin — Tags
+============================================================================ */
+
+/** (Admin) Fetch all tags. */
+export function useAdminTags(
+  options?: Partial<UseQueryOptions<Tag[], ApiError>>,
+) {
+  return useQuery<Tag[], ApiError>({
+    queryKey: queryKeys.admin.tags.all,
+    queryFn: api.getTags, // Using public getTags endpoint for now since no separate admin list endpoint exists
+    ...options,
+  });
+}
+
+/** (Admin) Create a tag. */
+export function useAdminCreateTag(
+  options?: UseMutationOptions<Tag, ApiError, TagCreate>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<Tag, ApiError, TagCreate>({
+    mutationFn: api.adminCreateTag,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Update a tag. */
+export function useAdminUpdateTag(
+  options?: UseMutationOptions<
+    Tag,
+    ApiError,
+    { tagId: string; payload: TagUpdate }
+  >,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    Tag,
+    ApiError,
+    { tagId: string; payload: TagUpdate }
+  >({
+    mutationFn: ({ tagId, payload }) =>
+      api.adminUpdateTag(tagId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Delete a tag. */
+export function useAdminDeleteTag(
+  options?: UseMutationOptions<MessageResponse, ApiError, string>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<MessageResponse, ApiError, string>({
+    mutationFn: api.adminDeleteTag,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
     },
     ...options,
   });
