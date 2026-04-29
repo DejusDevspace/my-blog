@@ -7,8 +7,12 @@ from pydantic import BaseModel, ConfigDict, Field
 
 class TagCreate(BaseModel):
     """Request body for creating a tag."""
-
     name: str = Field(..., min_length=1, max_length=50)
+
+
+class TagUpdate(BaseModel):
+	"""Request body for updating a tag."""
+	name: str = Field(..., min_length=1, max_length=50)
 
 
 class TagResponse(BaseModel):
