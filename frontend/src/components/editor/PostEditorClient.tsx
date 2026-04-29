@@ -21,6 +21,10 @@ import {
 	useAdminCreateSeries,
 } from "@/hooks/useApi";
 import type { PostStatus } from "@/types";
+import TagSelector from "./TagSelector";
+import CustomSelect from "@/components/ui/CustomSelect";
+import { useToast } from "@/hooks/useToast";
+import ConfirmModal from "@/components/ui/ConfirmModal";
 
 // Dynamically import BlockNote to avoid SSR issues
 const BlockNoteEditor = dynamic(() => import("./BlockNoteEditor"), {
@@ -72,9 +76,11 @@ export default function PostEditorClient({
 	const [isSaving, setIsSaving] = useState(false);
 	const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 	const [sidebarOpen, setSidebarOpen] = useState(false); // For mobile
-	const [tagInput, setTagInput] = useState("");
+	const [showPublishModal, setShowPublishModal] = useState(false);
 	const [showNewSeries, setShowNewSeries] = useState(false);
 	const [newSeriesTitle, setNewSeriesTitle] = useState("");
+
+	const toast = useToast();
 
 	const { data: categories } = useAdminCategories();
 	const { data: seriesList } = useAdminSeries();
@@ -137,17 +143,6 @@ export default function PostEditorClient({
 		setHasUnsavedChanges(true);
 	};
 
-	const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-		if (e.key === "Enter" || e.key === ",") {
-			e.preventDefault();
-			const newTag = tagInput.trim();
-			if (newTag && !data.tag_names.includes(newTag)) {
-				handleChange("tag_names", [...data.tag_names, newTag]);
-			}
-			setTagInput("");
-		}
-	};
-
 	const handleRemoveTag = (tagToRemove: string) => {
 		handleChange(
 			"tag_names",
@@ -179,34 +174,42 @@ export default function PostEditorClient({
 				? "draft-new"
 				: `draft-${initialData.slug || "edit"}`;
 			localStorage.removeItem(DRAFT_KEY);
+			toast.success("Draft saved successfully");
 		} catch (error) {
 			console.error("Save failed", error);
-			alert("Failed to save draft.");
+			toast.error("Failed to save draft.");
 		} finally {
 			setIsSaving(false);
 		}
 	};
 
-	const handlePublish = async () => {
-		if (window.confirm("Publish this post? It will be visible immediately.")) {
-			setIsSaving(true);
-			try {
-				if (onPublish) {
-					await onPublish({ ...data, status: "published" });
-				} else {
-					await onSave({ ...data, status: "published" });
-				}
-				setHasUnsavedChanges(false);
-				const DRAFT_KEY = isNew
-					? "draft-new"
-					: `draft-${initialData.slug || "edit"}`;
-				localStorage.removeItem(DRAFT_KEY);
-			} catch (error) {
-				console.error("Publish failed", error);
-				alert("Failed to publish post.");
-			} finally {
-				setIsSaving(false);
+	const handlePublish = () => {
+		setShowPublishModal(true);
+	};
+
+	const confirmPublish = async () => {
+		setIsSaving(true);
+		try {
+			if (onPublish) {
+				await onPublish({ ...data, status: "published" });
+			} else {
+				await onSave({ ...data, status: "published" });
 			}
+			setHasUnsavedChanges(false);
+			const DRAFT_KEY = isNew
+				? "draft-new"
+				: `draft-${initialData.slug || "edit"}`;
+			localStorage.removeItem(DRAFT_KEY);
+			toast.success(
+				data.status === "published"
+					? "Post updated successfully"
+					: "Post published successfully!",
+			);
+		} catch (error) {
+			console.error("Publish failed", error);
+			toast.error("Failed to publish post.");
+		} finally {
+			setIsSaving(false);
 		}
 	};
 
@@ -268,14 +271,14 @@ export default function PostEditorClient({
 					</button>
 
 					<button
-						className="btn-ghost"
+						className="btn-ghost cursor-pointer"
 						onClick={handleSaveDraft}
 						disabled={isSaving}
 					>
 						Save draft
 					</button>
 					<button
-						className="btn-primary"
+						className="btn-primary cursor-pointer"
 						onClick={handlePublish}
 						disabled={isSaving}
 					>
@@ -360,20 +363,17 @@ export default function PostEditorClient({
 							<label className="font-mono text-xs font-bold uppercase tracking-widest text-text-tertiary">
 								Category
 							</label>
-							<select
-								className="input h-10 w-full cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5YWEzYjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=')] bg-size-16px bg-position[right_12px_center] bg-no-repeat pr-10"
+							<CustomSelect
+								placeholder="Select category..."
 								value={data.category_id}
-								onChange={(e) => handleChange("category_id", e.target.value)}
-							>
-								<option value="" disabled>
-									Select category...
-								</option>
-								{categories?.map((cat) => (
-									<option key={cat.id} value={cat.id}>
-										{cat.name}
-									</option>
-								))}
-							</select>
+								onChange={(val) => handleChange("category_id", val)}
+								options={
+									categories?.map((cat) => ({
+										value: cat.id,
+										label: cat.name,
+									})) || []
+								}
+							/>
 						</div>
 
 						{/* Series */}
@@ -384,24 +384,21 @@ export default function PostEditorClient({
 									Series
 								</span>
 							</label>
-							<select
-								className="input h-10 w-full cursor-pointer appearance-none bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM5YWEzYjQiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cG9seWxpbmUgcG9pbnRzPSI2IDkgMTIgMTUgMTggOSI+PC9wb2x5bGluZT48L3N2Zz4=')] bg-size-16px bg-position[right_12px_center] bg-no-repeat pr-10"
-								value={data.series_id}
-								onChange={(e) => {
-									handleChange("series_id", e.target.value);
-									// Reset order when changing series
-									if (!e.target.value) {
-										handleChange("series_order", null);
-									}
+							<CustomSelect
+								placeholder="No series"
+								value={data.series_id || ""}
+								onChange={(val) => {
+									handleChange("series_id", val || null);
+									if (!val) handleChange("series_order", null);
 								}}
-							>
-								<option value="">No series</option>
-								{seriesList?.map((s) => (
-									<option key={s.id} value={s.id}>
-										{s.title} ({s.post_count} posts)
-									</option>
-								))}
-							</select>
+								options={[
+									{ value: "", label: "No series" },
+									...(seriesList?.map((s) => ({
+										value: s.id,
+										label: `${s.title} (${s.post_count} posts)`,
+									})) || []),
+								]}
+							/>
 
 							{/* Series order — only shown when a series is selected */}
 							{data.series_id && (
@@ -482,35 +479,15 @@ export default function PostEditorClient({
 						</div>
 
 						{/* Tags */}
-						<div className="flex flex-col gap-2">
-							<label className="font-mono text-xs font-bold uppercase tracking-widest text-text-tertiary">
-								Tags
-							</label>
-							<div className="flex flex-wrap gap-2 mb-2">
-								{data.tag_names.map((tag) => (
-									<span
-										key={tag}
-										className="inline-flex items-center gap-1 rounded-md bg-bg-subtle px-2 py-1 font-mono text-xs text-text-secondary"
-									>
-										{tag}
-										<button
-											onClick={() => handleRemoveTag(tag)}
-											className="text-text-tertiary hover:text-danger"
-										>
-											<X size={12} />
-										</button>
-									</span>
-								))}
-							</div>
-							<input
-								type="text"
-								className="input"
-								placeholder="Add tag... (press Enter)"
-								value={tagInput}
-								onChange={(e) => setTagInput(e.target.value)}
-								onKeyDown={handleAddTag}
-							/>
-						</div>
+						<TagSelector
+							selectedTags={data.tag_names}
+							onAddTag={(tag) => {
+								if (!data.tag_names.includes(tag)) {
+									handleChange("tag_names", [...data.tag_names, tag]);
+								}
+							}}
+							onRemoveTag={handleRemoveTag}
+						/>
 
 						{/* Slug */}
 						<div className="flex flex-col gap-2">
@@ -563,6 +540,19 @@ export default function PostEditorClient({
 					/>
 				)}
 			</div>
+			{/* Confirmation Modals */}
+			<ConfirmModal
+				isOpen={showPublishModal}
+				onClose={() => setShowPublishModal(false)}
+				onConfirm={confirmPublish}
+				title={data.status === "published" ? "Update Post" : "Publish Post"}
+				message={
+					data.status === "published"
+						? "Are you sure you want to update this post? The changes will be live immediately."
+						: "Are you sure you want to publish this post? It will be visible to the public immediately."
+				}
+				confirmText={data.status === "published" ? "Update" : "Publish"}
+			/>
 		</div>
 	);
 }

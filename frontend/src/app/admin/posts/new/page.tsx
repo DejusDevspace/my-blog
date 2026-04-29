@@ -16,8 +16,9 @@ export default function NewPostPage() {
 				category_id: data.category_id || undefined,
 				series_id: data.series_id || null,
 				series_order: data.series_order || null,
+				tags: data.tag_names || [],
 				status: data.status,
-			} as any);
+			});
 
 			// On success, redirect to the edit page to avoid creating duplicates on subsequent saves
 			router.push(`/admin/posts/${newPost.id}/edit`);

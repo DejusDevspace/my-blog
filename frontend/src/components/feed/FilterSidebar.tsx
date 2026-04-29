@@ -37,7 +37,7 @@ export default function FilterSidebar({
 	});
 
 	return (
-		<aside className="hidden lg:flex flex-col gap-8 w-60 shrink-0 border-r border-border-subtle pr-6">
+		<aside className="hidden lg:flex flex-col gap-8 w-60 shrink-0 border-r border-border-subtle pr-6 hide-scrollbar">
 			{/* Categories */}
 			<div>
 				<h3 className="mb-4 font-mono text-xs uppercase tracking-wider text-text-tertiary">

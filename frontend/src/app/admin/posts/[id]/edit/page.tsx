@@ -46,6 +46,7 @@ export default function EditPostPage() {
 					content: data.content,
 					slug: data.slug,
 					category_id: data.category_id || undefined,
+					tags: data.tag_names || [],
 					series_id: data.series_id || null,
 					series_order: data.series_order || null,
 					status: data.status,

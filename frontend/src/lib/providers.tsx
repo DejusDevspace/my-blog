@@ -11,6 +11,7 @@
 import { useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
+import { ToastProvider } from "@/context/ToastContext";
 
 interface ProvidersProps {
 	children: ReactNode;
@@ -39,7 +40,7 @@ export default function Providers({ children }: ProvidersProps) {
 				enableSystem={false}
 				disableTransitionOnChange
 			>
-				{children}
+				<ToastProvider>{children}</ToastProvider>
 			</ThemeProvider>
 		</QueryClientProvider>
 	);

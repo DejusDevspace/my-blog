@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BlockNoteEditor as BlockNoteEditorType } from "@blocknote/core";
+import { BlockNoteSchema, createCodeBlockSpec } from "@blocknote/core";
 import { useCreateBlockNote } from "@blocknote/react";
 import {
 	BlockNoteView,
@@ -9,6 +9,7 @@ import {
 	lightDefaultTheme,
 	Theme,
 } from "@blocknote/mantine";
+import { codeBlockOptions } from "@blocknote/code-block";
 import { useTheme } from "next-themes";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
@@ -56,6 +57,10 @@ const cyberLightTheme: Theme = {
 		editor: {
 			text: "var(--color-text-primary)",
 			background: "transparent",
+		},
+		sideMenu: {
+			text: "var(--color-text-primary)",
+			background: "var(--color-bg-elevated)",
 		},
 		menu: {
 			text: "var(--color-text-primary)",
@@ -115,6 +120,11 @@ export default function BlockNoteEditor({
 	// Create the editor instance.
 	const editor = useCreateBlockNote({
 		uploadFile: handleUpload,
+		schema: BlockNoteSchema.create().extend({
+			blockSpecs: {
+				codeBlock: createCodeBlockSpec(codeBlockOptions),
+			},
+		}),
 	});
 
 	const { resolvedTheme } = useTheme();

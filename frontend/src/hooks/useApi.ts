@@ -28,6 +28,7 @@ import type {
   SeriesCreate,
   SeriesListItem,
   SeriesResponse,
+  Tag,
 } from "@/types";
 import * as api from "@/services/api";
 import type { ListPostsParams, AdminListPostsParams } from "@/services/api";
@@ -61,6 +62,12 @@ export const queryKeys = {
     series: {
       all: ["admin", "series"] as const,
     },
+    tags: {
+      all: ["admin", "tags"] as const,
+    },
+  },
+  tags: {
+    all: ["tags"] as const,
   },
   health: ["health"] as const,
 } as const;
@@ -291,6 +298,21 @@ export function useAdminCreateSeries(
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
     },
+    ...options,
+  });
+}
+
+/* ============================================================================
+  Taxonomy
+============================================================================ */
+
+/** Fetch all tags (public). */
+export function useTags(
+  options?: Partial<UseQueryOptions<Tag[], ApiError>>,
+) {
+  return useQuery<Tag[], ApiError>({
+    queryKey: queryKeys.tags.all,
+    queryFn: api.getTags,
     ...options,
   });
 }

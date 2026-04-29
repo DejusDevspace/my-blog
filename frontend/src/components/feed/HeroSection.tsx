@@ -8,7 +8,7 @@ interface HeroSectionProps {
 
 export default function HeroSection({ totalPosts }: HeroSectionProps) {
 	return (
-		<div className="border-t-2 border-accent/80 pt-10 pb-8 mb-8">
+		<div className="lg:border-t-2 border-accent/80 lg:pt-10 pb-8 mb-8">
 			<div className="flex flex-col items-start gap-4">
 				{/* Headline */}
 				<h1 className="flex items-center flex-wrap gap-2 text-h2 md:text-display font-display font-bold text-text-primary">
@@ -23,8 +23,10 @@ export default function HeroSection({ totalPosts }: HeroSectionProps) {
 
 				{/* Sub-headline */}
 				<p className="max-w-2xl font-body text-body-lg text-text-secondary">
-					AI/ML Engineer documenting the frontier of neural networks, computer
-					vision, and the agentic age.
+					I'm just a boy finding his voice in a noisy world. Here, I'm an{" "}
+					<em>AI/ML Engineer</em>, and I document my projects, lessons, ideas,
+					thoughts, and basically, just <strong>ME</strong>. Hope you find
+					something for you!
 				</p>
 
 				{/* Post count */}

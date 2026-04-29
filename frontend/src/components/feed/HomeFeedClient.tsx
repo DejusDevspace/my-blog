@@ -8,7 +8,8 @@ import FilterSidebar from "./FilterSidebar";
 import MobileFilterBar from "./MobileFilterBar";
 import PostCard from "./PostCard";
 import type { PostListItem } from "@/types";
-import { FileText, FilterX, Loader2 } from "lucide-react";
+import { FileText, FilterX } from "lucide-react";
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function HomeFeedClient() {
 	const searchParams = useSearchParams();
@@ -117,15 +118,17 @@ export default function HomeFeedClient() {
 	}
 
 	return (
-		<div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 lg:flex-row lg:px-8">
-			<FilterSidebar
-				activeCategory={activeCategory}
-				activeTag={activeTag}
-				activeSeries={activeSeries}
-				onCategoryChange={(cat) => updateFilter("category", cat)}
-				onTagChange={(tag) => updateFilter("tag", tag)}
-				onSeriesChange={(series) => updateFilter("series", series)}
-			/>
+		<div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 pb-5 lg:py-12 lg:flex-row lg:px-8">
+			<div className="sticky top-24 h-full">
+				<FilterSidebar
+					activeCategory={activeCategory}
+					activeTag={activeTag}
+					activeSeries={activeSeries}
+					onCategoryChange={(cat) => updateFilter("category", cat)}
+					onTagChange={(tag) => updateFilter("tag", tag)}
+					onSeriesChange={(series) => updateFilter("series", series)}
+				/>
+			</div>
 
 			<div className="flex-1">
 				<HeroSection totalPosts={data?.total || 0} />
@@ -155,7 +158,7 @@ export default function HomeFeedClient() {
 						</span>
 						<button
 							onClick={() => router.push("/")}
-							className="flex items-center gap-1 font-mono text-[0.65rem] uppercase text-text-tertiary hover:text-danger transition-colors"
+							className="flex items-center gap-1 font-mono text-[0.65rem] uppercase text-text-tertiary cursor-pointer hover:text-danger transition-colors"
 						>
 							<FilterX className="h-3 w-3" />
 							Clear
@@ -199,7 +202,7 @@ export default function HomeFeedClient() {
 								>
 									{isFetching ? (
 										<>
-											<Loader2 className="h-4 w-4 animate-spin" /> Loading...
+											<LoadingSpinner size="sm" label="Loading..." />
 										</>
 									) : (
 										"Load More"
