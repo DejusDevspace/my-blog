@@ -7,7 +7,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.post import Tag
-from app.schemas.tag import TagCreate
+from app.schemas.tag import TagCreate, TagUpdate
 
 
 async def list_tags(db: AsyncSession) -> list[Tag]:
@@ -48,6 +48,23 @@ async def create_tag(
 ) -> Tag:
     """Create a new tag (or return existing with same slug)."""
     return await get_or_create_tag(db, data.name, owner_id)
+
+async def update_tag(
+    db: AsyncSession,
+    tag_id: uuid.UUID,
+    data: TagUpdate,
+) -> Tag | None:
+    """Update a tag's name (and auto-generate new slug)."""
+    result = await db.execute(select(Tag).where(Tag.id == tag_id))
+    tag = result.scalar_one_or_none()
+    if not tag:
+        return None
+
+    tag.name = data.name
+    tag.slug = slugify(data.name, max_length=80)
+    await db.flush()
+    await db.refresh(tag)
+    return tag
 
 
 async def delete_tag(
