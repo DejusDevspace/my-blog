@@ -39,6 +39,18 @@ import * as api from "@/services/api";
 import type { ListPostsParams, AdminListPostsParams } from "@/services/api";
 
 /* ============================================================================
+  Stale-time tiers — tuned by data volatility
+============================================================================ */
+
+const STALE = {
+  /** Categories, tags, series lists — rarely change */
+  taxonomy: 5 * 60 * 1000,   // 5 minutes
+  /** Individual post content — changes infrequently once published */
+  postDetail: 10 * 60 * 1000, // 10 minutes
+  // Post lists use the global default (2 min) — no override needed.
+} as const;
+
+/* ============================================================================
   Query Key Factory — keeps cache keys consistent
 ============================================================================ */
 
@@ -103,6 +115,7 @@ export function usePost(
   return useQuery<Post, ApiError>({
     queryKey: queryKeys.posts.detail(slug),
     queryFn: () => api.getPostBySlug(slug),
+    staleTime: STALE.postDetail,
     enabled: !!slug,
     ...options,
   });
@@ -119,6 +132,7 @@ export function usePublicSeries(
   return useQuery<SeriesListItem[], ApiError>({
     queryKey: queryKeys.series.list,
     queryFn: api.getPublicSeries,
+    staleTime: STALE.taxonomy,
     ...options,
   });
 }
@@ -131,6 +145,7 @@ export function useSeriesDetail(
   return useQuery<SeriesResponse, ApiError>({
     queryKey: queryKeys.series.detail(slug),
     queryFn: () => api.getSeriesBySlug(slug),
+    staleTime: STALE.taxonomy,
     enabled: !!slug,
     ...options,
   });
@@ -271,6 +286,7 @@ export function useAdminCategories(
   return useQuery<Category[], ApiError>({
     queryKey: queryKeys.admin.categories.all,
     queryFn: api.adminListCategories,
+    staleTime: STALE.taxonomy,
     ...options,
   });
 }
@@ -337,6 +353,7 @@ export function useAdminSeries(
   return useQuery<SeriesListItem[], ApiError>({
     queryKey: queryKeys.admin.series.all,
     queryFn: () => api.adminListSeries(),
+    staleTime: STALE.taxonomy,
     ...options,
   });
 }
@@ -408,6 +425,7 @@ export function useAdminTags(
   return useQuery<Tag[], ApiError>({
     queryKey: queryKeys.admin.tags.all,
     queryFn: api.getTags, // Using public getTags endpoint for now since no separate admin list endpoint exists
+    staleTime: STALE.taxonomy,
     ...options,
   });
 }

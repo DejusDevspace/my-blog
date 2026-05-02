@@ -1,8 +1,12 @@
 "use client";
 
+import { useCallback } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { useQueryClient } from "@tanstack/react-query";
 import { Clock, Layers } from "lucide-react";
+import { queryKeys } from "@/hooks/useApi";
+import { getPostBySlug } from "@/services/api";
 import type { PostListItem } from "@/types";
 
 interface PostCardProps {
@@ -10,9 +14,22 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post }: PostCardProps) {
+	const queryClient = useQueryClient();
+
+	// Prefetch the full post on hover so the detail page loads instantly
+	const prefetchPost = useCallback(() => {
+		queryClient.prefetchQuery({
+			queryKey: queryKeys.posts.detail(post.slug),
+			queryFn: () => getPostBySlug(post.slug),
+			staleTime: 10 * 60 * 1000, // 10 minutes — matches the usePost hook
+		});
+	}, [queryClient, post.slug]);
+
 	return (
 		<Link
 			href={`/posts/${post.slug}`}
+			onMouseEnter={prefetchPost}
+			onFocus={prefetchPost}
 			className="group flex flex-col gap-4 rounded-xl border border-border-subtle bg-bg-surface p-6 transition-all duration-300 hover:-translate-y-1 hover:border-border-default hover:shadow-lg"
 		>
 			{/* Top Row: Badges & Date */}
