@@ -15,6 +15,7 @@ class Series(Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("owners.id"),
         nullable=False,
+        index=True,
     )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     slug: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
@@ -23,6 +24,7 @@ class Series(Base):
         Text,
         nullable=False,
         default="draft",
+        index=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         default=datetime.now,
@@ -37,6 +39,6 @@ class Series(Base):
     # --- Relationships ---
     posts: Mapped[list["Post"]] = relationship(  # noqa: F821
         back_populates="series",
-        lazy="selectin",
+        lazy="noload",  # Loaded explicitly in series detail queries
         order_by="Post.series_order",
     )

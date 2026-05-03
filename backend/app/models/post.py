@@ -6,6 +6,7 @@ from datetime import datetime
 from sqlalchemy import (
     Boolean,
     ForeignKey,
+    Index,
     Integer,
     Text,
     UniqueConstraint,
@@ -26,10 +27,12 @@ class PostTag(Base):
     post_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("posts.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     tag_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("tags.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
 
 
@@ -42,6 +45,7 @@ class Tag(Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("owners.id"),
         nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     slug: Mapped[str] = mapped_column(Text, nullable=False)
@@ -50,16 +54,25 @@ class Tag(Base):
     posts: Mapped[list["Post"]] = relationship(
         secondary="post_tags",
         back_populates="tags",
-        lazy="selectin",
+        lazy="noload",  # Loaded via post queries, not when fetching tags
     )
 
 
 class Post(Base):
     __tablename__ = "posts"
+    __table_args__ = (
+        Index(
+            "ix_posts_status_deleted_published",
+            "status",
+            "deleted_at",
+            "published_at",
+        ),
+    )
 
     owner_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("owners.id"),
         nullable=False,
+        index=True,
     )
     title: Mapped[str] = mapped_column(Text, nullable=False)
     slug: Mapped[str] = mapped_column(Text, unique=True, nullable=False)
@@ -68,6 +81,7 @@ class Post(Base):
     category_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("categories.id"),
         nullable=False,
+        index=True,
     )
     status: Mapped[str] = mapped_column(
         Text,
@@ -86,6 +100,7 @@ class Post(Base):
     series_id: Mapped[uuid.UUID | None] = mapped_column(
         ForeignKey("series.id", ondelete="SET NULL"),
         nullable=True,
+        index=True,
     )
     series_order: Mapped[int | None] = mapped_column(
         Integer,
@@ -119,5 +134,5 @@ class Post(Base):
     )
     comments: Mapped[list["Comment"]] = relationship(  # noqa: F821
         back_populates="post",
-        lazy="selectin",
+        lazy="noload",  # Only load when explicitly needed (post detail page)
     )
