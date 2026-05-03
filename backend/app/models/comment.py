@@ -15,6 +15,7 @@ class Comment(Base):
     post_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("posts.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
     owner_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("owners.id"),
@@ -26,6 +27,7 @@ class Comment(Base):
         Text,
         nullable=False,
         default="approved",
+        index=True,
     )
     created_at: Mapped[datetime] = mapped_column(
         default=datetime.now,
