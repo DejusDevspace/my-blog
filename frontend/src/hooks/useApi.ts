@@ -17,6 +17,8 @@ import {
 import type {
   ApiError,
   Category,
+  CategoryCreate,
+  CategoryUpdate,
   Comment,
   CommentCreate,
   MessageResponse,
@@ -28,10 +30,25 @@ import type {
   SeriesCreate,
   SeriesListItem,
   SeriesResponse,
+  SeriesUpdate,
   Tag,
+  TagCreate,
+  TagUpdate,
 } from "@/types";
 import * as api from "@/services/api";
 import type { ListPostsParams, AdminListPostsParams } from "@/services/api";
+
+/* ============================================================================
+  Stale-time tiers — tuned by data volatility
+============================================================================ */
+
+const STALE = {
+  /** Categories, tags, series lists — rarely change */
+  taxonomy: 5 * 60 * 1000,   // 5 minutes
+  /** Individual post content — changes infrequently once published */
+  postDetail: 10 * 60 * 1000, // 10 minutes
+  // Post lists use the global default (2 min) — no override needed.
+} as const;
 
 /* ============================================================================
   Query Key Factory — keeps cache keys consistent
@@ -98,6 +115,7 @@ export function usePost(
   return useQuery<Post, ApiError>({
     queryKey: queryKeys.posts.detail(slug),
     queryFn: () => api.getPostBySlug(slug),
+    staleTime: STALE.postDetail,
     enabled: !!slug,
     ...options,
   });
@@ -114,6 +132,7 @@ export function usePublicSeries(
   return useQuery<SeriesListItem[], ApiError>({
     queryKey: queryKeys.series.list,
     queryFn: api.getPublicSeries,
+    staleTime: STALE.taxonomy,
     ...options,
   });
 }
@@ -126,6 +145,7 @@ export function useSeriesDetail(
   return useQuery<SeriesResponse, ApiError>({
     queryKey: queryKeys.series.detail(slug),
     queryFn: () => api.getSeriesBySlug(slug),
+    staleTime: STALE.taxonomy,
     enabled: !!slug,
     ...options,
   });
@@ -266,6 +286,58 @@ export function useAdminCategories(
   return useQuery<Category[], ApiError>({
     queryKey: queryKeys.admin.categories.all,
     queryFn: api.adminListCategories,
+    staleTime: STALE.taxonomy,
+    ...options,
+  });
+}
+
+/** (Admin) Create a category. */
+export function useAdminCreateCategory(
+  options?: UseMutationOptions<Category, ApiError, CategoryCreate>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<Category, ApiError, CategoryCreate>({
+    mutationFn: api.adminCreateCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Update a category. */
+export function useAdminUpdateCategory(
+  options?: UseMutationOptions<
+    Category,
+    ApiError,
+    { categoryId: string; payload: CategoryUpdate }
+  >,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    Category,
+    ApiError,
+    { categoryId: string; payload: CategoryUpdate }
+  >({
+    mutationFn: ({ categoryId, payload }) =>
+      api.adminUpdateCategory(categoryId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Delete a category. */
+export function useAdminDeleteCategory(
+  options?: UseMutationOptions<MessageResponse, ApiError, string>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<MessageResponse, ApiError, string>({
+    mutationFn: api.adminDeleteCategory,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories.all });
+    },
     ...options,
   });
 }
@@ -281,6 +353,7 @@ export function useAdminSeries(
   return useQuery<SeriesListItem[], ApiError>({
     queryKey: queryKeys.admin.series.all,
     queryFn: () => api.adminListSeries(),
+    staleTime: STALE.taxonomy,
     ...options,
   });
 }
@@ -297,6 +370,115 @@ export function useAdminCreateSeries(
         queryKey: queryKeys.admin.series.all,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Update a series. */
+export function useAdminUpdateSeries(
+  options?: UseMutationOptions<
+    SeriesResponse,
+    ApiError,
+    { seriesId: string; payload: SeriesUpdate }
+  >,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    SeriesResponse,
+    ApiError,
+    { seriesId: string; payload: SeriesUpdate }
+  >({
+    mutationFn: ({ seriesId, payload }) =>
+      api.adminUpdateSeries(seriesId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.series.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Delete a series. */
+export function useAdminDeleteSeries(
+  options?: UseMutationOptions<MessageResponse, ApiError, string>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<MessageResponse, ApiError, string>({
+    mutationFn: api.adminDeleteSeries,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.series.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+    },
+    ...options,
+  });
+}
+
+/* ============================================================================
+  Admin — Tags
+============================================================================ */
+
+/** (Admin) Fetch all tags. */
+export function useAdminTags(
+  options?: Partial<UseQueryOptions<Tag[], ApiError>>,
+) {
+  return useQuery<Tag[], ApiError>({
+    queryKey: queryKeys.admin.tags.all,
+    queryFn: api.getTags, // Using public getTags endpoint for now since no separate admin list endpoint exists
+    staleTime: STALE.taxonomy,
+    ...options,
+  });
+}
+
+/** (Admin) Create a tag. */
+export function useAdminCreateTag(
+  options?: UseMutationOptions<Tag, ApiError, TagCreate>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<Tag, ApiError, TagCreate>({
+    mutationFn: api.adminCreateTag,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Update a tag. */
+export function useAdminUpdateTag(
+  options?: UseMutationOptions<
+    Tag,
+    ApiError,
+    { tagId: string; payload: TagUpdate }
+  >,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    Tag,
+    ApiError,
+    { tagId: string; payload: TagUpdate }
+  >({
+    mutationFn: ({ tagId, payload }) =>
+      api.adminUpdateTag(tagId, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Delete a tag. */
+export function useAdminDeleteTag(
+  options?: UseMutationOptions<MessageResponse, ApiError, string>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<MessageResponse, ApiError, string>({
+    mutationFn: api.adminDeleteTag,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
     },
     ...options,
   });

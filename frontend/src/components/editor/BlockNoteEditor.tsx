@@ -58,10 +58,7 @@ const cyberLightTheme: Theme = {
 			text: "var(--color-text-primary)",
 			background: "transparent",
 		},
-		sideMenu: {
-			text: "var(--color-text-primary)",
-			background: "var(--color-bg-elevated)",
-		},
+		sideMenu: "var(--color-text-secondary)",
 		menu: {
 			text: "var(--color-text-primary)",
 			background: "var(--color-bg-elevated)",
@@ -84,7 +81,6 @@ const cyberLightTheme: Theme = {
 		},
 		shadow: "var(--shadow-lg)",
 		border: "var(--color-border-subtle)",
-		sideMenu: "var(--color-text-secondary)",
 	},
 	borderRadius: 6,
 	fontFamily: "var(--font-body)",

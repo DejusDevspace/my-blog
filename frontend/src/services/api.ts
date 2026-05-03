@@ -22,7 +22,10 @@ import type {
   SeriesCreate,
   SeriesListItem,
   SeriesResponse,
+  SeriesUpdate,
   Tag,
+  TagCreate,
+  TagUpdate,
 } from "@/types";
 
 /* ============================================================================
@@ -230,6 +233,65 @@ export async function adminCreateSeries(
   const { data } = await apiClient.post<SeriesResponse>(
     "/admin/series",
     payload,
+  );
+  return data;
+}
+
+/** (Admin) Update a series. */
+export async function adminUpdateSeries(
+  seriesId: string,
+  payload: SeriesUpdate,
+): Promise<SeriesResponse> {
+  const { data } = await apiClient.patch<SeriesResponse>(
+    `/admin/series/${seriesId}`,
+    payload,
+  );
+  return data;
+}
+
+/** (Admin) Delete a series. */
+export async function adminDeleteSeries(
+  seriesId: string,
+): Promise<MessageResponse> {
+  const { data } = await apiClient.delete<MessageResponse>(
+    `/admin/series/${seriesId}`,
+  );
+  return data;
+}
+
+/* ============================================================================
+  Admin — Tags
+============================================================================ */
+
+/** (Admin) Create a new tag. */
+export async function adminCreateTag(
+  payload: TagCreate,
+): Promise<Tag> {
+  const { data } = await apiClient.post<Tag>(
+    "/admin/tags",
+    payload,
+  );
+  return data;
+}
+
+/** (Admin) Update a tag. */
+export async function adminUpdateTag(
+  tagId: string,
+  payload: TagUpdate,
+): Promise<Tag> {
+  const { data } = await apiClient.patch<Tag>(
+    `/admin/tags/${tagId}`,
+    payload,
+  );
+  return data;
+}
+
+/** (Admin) Delete a tag. */
+export async function adminDeleteTag(
+  tagId: string,
+): Promise<MessageResponse> {
+  const { data } = await apiClient.delete<MessageResponse>(
+    `/admin/tags/${tagId}`,
   );
   return data;
 }

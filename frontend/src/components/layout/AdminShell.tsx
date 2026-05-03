@@ -15,6 +15,7 @@ import {
 	Network,
 	SlidersHorizontal,
 	TerminalSquare,
+	Tag,
 } from "lucide-react";
 
 interface NavItem {
@@ -36,6 +37,13 @@ const NAV_GROUPS = [
 				icon: Sparkles,
 				badge: 2,
 			},
+		],
+	},
+	{
+		label: "ORGANIZATION",
+		items: [
+			{ href: "/admin/taxonomy", label: "Taxonomy", icon: Tag },
+			{ href: "/admin/series", label: "Series", icon: Layers },
 		],
 	},
 	{
