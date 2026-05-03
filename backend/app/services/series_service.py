@@ -84,7 +84,13 @@ async def get_series_by_slug(
     slug: str,
 ) -> Series | None:
     """Fetch a single series by slug with its ordered posts."""
-    result = await db.execute(select(Series).where(Series.slug == slug))
+    from sqlalchemy.orm import selectinload
+
+    result = await db.execute(
+        select(Series)
+        .where(Series.slug == slug)
+        .options(selectinload(Series.posts))
+    )
     return result.scalar_one_or_none()
 
 

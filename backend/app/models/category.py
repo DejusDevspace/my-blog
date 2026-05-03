@@ -18,6 +18,7 @@ class Category(Base):
     owner_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("owners.id"),
         nullable=False,
+        index=True,
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     slug: Mapped[str] = mapped_column(Text, nullable=False)
@@ -30,5 +31,5 @@ class Category(Base):
     # --- Relationships ---
     posts: Mapped[list["Post"]] = relationship(  # noqa: F821
         back_populates="category",
-        lazy="selectin",
+        lazy="noload",  # Loaded via post queries, not when fetching categories
     )
