@@ -37,12 +37,19 @@ async function proxyRequest(request: NextRequest): Promise<NextResponse> {
   const init: RequestInit = {
     method: request.method,
     headers,
-    // Don't send body for GET/HEAD
-    ...(request.method !== "GET" &&
-      request.method !== "HEAD" && {
-      body: await request.text(),
-    }),
   };
+
+  // Forward body for non-GET/HEAD requests.
+  // Multipart form data must be forwarded as raw bytes to preserve
+  // the boundary markers; regular JSON bodies use text.
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    const contentType = request.headers.get("content-type") ?? "";
+    if (contentType.includes("multipart/form-data")) {
+      init.body = await request.arrayBuffer();
+    } else {
+      init.body = await request.text();
+    }
+  }
 
   try {
     const backendResponse = await fetch(targetUrl, init);
