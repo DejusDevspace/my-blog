@@ -14,6 +14,7 @@ from app.routers import (
     admin_posts,
     admin_series,
     admin_tags,
+    admin_uploads,
     public_comments,
     public_posts,
 )
@@ -69,6 +70,7 @@ app.include_router(admin_posts.router, prefix=API_V1)
 app.include_router(admin_categories.router, prefix=API_V1)
 app.include_router(admin_series.router, prefix=API_V1)
 app.include_router(admin_tags.router, prefix=API_V1)
+app.include_router(admin_uploads.router, prefix=API_V1)
 app.include_router(admin_comments.router, prefix=API_V1)
 
 
