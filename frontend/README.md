@@ -1,36 +1,56 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# d3jusdevspace — Frontend
 
-## Getting Started
+The frontend for my personal AI-powered blog and knowledge hub. Built with Next.js App Router, Tailwind CSS v4, and React Query, featuring a modern Cyber-Luxury design.
 
-First, run the development server:
+## Tech Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+| Technology           | Purpose                                             |
+| -------------------- | --------------------------------------------------- |
+| **Next.js 16**       | React framework with App Router                     |
+| **Tailwind CSS v4**  | Utility-first CSS framework for styling             |
+| **React Query (v5)** | Data fetching, caching, and state management        |
+| **NextAuth.js**      | Admin authentication                                |
+| **BlockNote**        | Block-based rich text editor for markdown           |
+| **React Markdown**   | Rendering markdown content with syntax highlighting |
+
+## Features
+
+- **Public Blog**: View posts, categories, tags, and series.
+- **Admin Dashboard**: Full CMS for managing posts, categories, tags, series, and comments.
+- **Markdown Editor**: Rich text editing with BlockNote, supporting code blocks and image uploads via Cloudinary.
+- **Cyber-Luxury Aesthetic**: Custom dark theme with neon accents, smooth gradients, and glassmorphism elements.
+- **API Proxy**: Next.js proxy route (`/api/proxy`) to forward requests to the FastAPI backend, handling authentication transparently.
+
+## Environment Variables
+
+Copy `.env.example` to `.env.local` and configure your settings:
+
+```env
+BACKEND_URL=http://localhost:8000
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-here
+NEXTAUTH_URL=http://localhost:3000
+ADMIN_EMAIL=admin@d3jus.dev
+ADMIN_PASSWORD=admin
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Running Locally
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Run the development server:
+   ```bash
+   npm run dev
+   ```
+3. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Architecture Highlights
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- **`src/app`**: Next.js App Router pages and layouts.
+- **`src/app/api/proxy`**: Proxies requests to the backend. Handles `multipart/form-data` for image uploads.
+- **`src/components`**: Reusable UI components, editor components, and blog layouts.
+- **`src/services/api.ts`**: API wrapper functions that interface with the backend via `apiClient.ts`.
+- **`src/hooks/useApi.ts`**: React Query hooks for fetching and mutating data.
+- **`src/types`**: TypeScript interfaces that mirror backend Pydantic schemas.
