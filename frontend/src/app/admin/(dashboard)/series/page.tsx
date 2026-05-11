@@ -168,7 +168,7 @@ export default function SeriesPage() {
 						</div>
 						<input
 							type="text"
-							className="input w-full pl-9"
+							className="input w-full pl-9!"
 							placeholder="Search series..."
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}
