@@ -473,6 +473,26 @@ body {
 	vertical-align: top;
 }
 
+.prose img {
+	max-width: 100%;
+	max-height: 600px;
+	width: 100%;
+	height: auto;
+	object-fit: contain;
+	border-radius: var(--radius-md);
+	border: 1px solid var(--color-border-subtle);
+	margin: var(--space-6) 0;
+}
+
+/* ── BlockNote Editor — image constraints ── */
+
+.blocknote-wrapper img {
+	max-width: 100%;
+	max-height: 600px;
+	object-fit: contain;
+	border-radius: var(--radius-md);
+}
+
 /* ============================================================================
   Utilities
 ============================================================================ */

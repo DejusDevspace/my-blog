@@ -13,6 +13,7 @@ import { codeBlockOptions } from "@blocknote/code-block";
 import { useTheme } from "next-themes";
 import "@blocknote/core/fonts/inter.css";
 import "@blocknote/mantine/style.css";
+import { adminUploadImage } from "@/services/api";
 
 const cyberDarkTheme: Theme = {
 	...darkDefaultTheme,
@@ -104,13 +105,10 @@ export default function BlockNoteEditor({
 }: BlockNoteEditorProps) {
 	const [initialContentLoaded, setInitialContentLoaded] = useState(false);
 
-	// Mock file upload function
+	// Upload images to Cloudinary via the backend.
 	const handleUpload = async (file: File) => {
-		// Simulate network delay
-		await new Promise((resolve) => setTimeout(resolve, 1500));
-
-		// Return a mock placeholder URL using the file name or a generic placeholder
-		return `https://placehold.co/800x400/162440/00e5ff.png?text=${encodeURIComponent(file.name)}`;
+		const { url } = await adminUploadImage(file);
+		return url;
 	};
 
 	// Create the editor instance.

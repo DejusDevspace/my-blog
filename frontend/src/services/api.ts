@@ -311,6 +311,33 @@ export async function adminDeleteComment(
 }
 
 /* ============================================================================
+  Admin — Uploads
+============================================================================ */
+
+/** (Admin) Upload an image to Cloudinary via the backend. */
+export async function adminUploadImage(file: File): Promise<{ url: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const { data } = await apiClient.post<{ url: string }>(
+    "/admin/uploads/image",
+    formData,
+    { headers: { "Content-Type": "multipart/form-data" } },
+  );
+  return data;
+}
+
+/** (Admin) Delete a previously uploaded image from Cloudinary. */
+export async function adminDeleteImage(
+  url: string,
+): Promise<MessageResponse> {
+  const { data } = await apiClient.delete<MessageResponse>(
+    "/admin/uploads/image",
+    { data: { url } },
+  );
+  return data;
+}
+
+/* ============================================================================
   Health
 ============================================================================ */
 

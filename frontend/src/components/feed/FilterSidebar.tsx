@@ -87,7 +87,7 @@ export default function FilterSidebar({
 								onClick={() =>
 									onSeriesChange(activeSeries === s.slug ? null : s.slug)
 								}
-								className={`w-full text-left px-3 py-2 text-sm font-medium transition-colors ${
+								className={`w-full text-left px-3 py-2 text-sm font-medium transition-colors cursor-pointer ${
 									activeSeries === s.slug
 										? "bg-accent-muted text-accent border-l-2 border-accent"
 										: "text-text-secondary hover:text-text-primary border-l-2 border-transparent"
