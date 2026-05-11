@@ -18,6 +18,11 @@ class Settings(BaseSettings):
     # --- Auth ---
     NEXTAUTH_SECRET: str
 
+    # --- Cloudinary ---
+    CLOUDINARY_CLOUD_NAME: str
+    CLOUDINARY_API_KEY: str
+    CLOUDINARY_API_SECRET: str
+
     # --- Application ---
     environment: str = "development"
     cors_origins: str = "http://localhost:3000"
