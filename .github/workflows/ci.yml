@@ -1,0 +1,64 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# d3jusdevspace — CI Pipeline
+# Runs on push and PRs to main. Two parallel jobs: backend + frontend.
+# ──────────────────────────────────────────────────────────────────────────────
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  # ── Backend ──────────────────────────────────────────────────────────────
+  backend:
+    name: Backend — Build & Verify
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Python
+        run: uv python install 3.14
+
+      - name: Install dependencies
+        run: uv sync
+
+      - name: Verify app imports cleanly
+        run: uv run python -c "from main import app; print('✓ App imported successfully')"
+
+  # ── Frontend ─────────────────────────────────────────────────────────────
+  frontend:
+    name: Frontend — Build & Type Check
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (includes TypeScript type-check)
+        run: npm run build
+        env:
+          BACKEND_URL: http://localhost:8000
+          NEXTAUTH_SECRET: ci-dummy-secret
+          NEXTAUTH_URL: http://localhost:3000
