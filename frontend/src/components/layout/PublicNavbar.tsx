@@ -1,31 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Search, Moon, Monitor } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Search, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export default function PublicNavbar() {
-	const [theme, setTheme] = useState<"light" | "dark">("dark");
-
-	// Initial theme setup (simplified for now, assumes dark is default as per spec)
-	useEffect(() => {
-		const stored = localStorage.getItem("theme");
-		if (stored === "light") {
-			// eslint-disable-next-line react-hooks/set-state-in-effect
-			setTheme("light");
-			document.documentElement.setAttribute("data-theme", "light");
-		} else {
-			// eslint-disable-next-line react-hooks/set-state-in-effect
-			setTheme("dark");
-			document.documentElement.setAttribute("data-theme", "dark");
-		}
-	}, []);
+	const { theme, setTheme } = useTheme();
 
 	const toggleTheme = () => {
-		const newTheme = theme === "dark" ? "light" : "dark";
-		setTheme(newTheme);
-		localStorage.setItem("theme", newTheme);
-		document.documentElement.setAttribute("data-theme", newTheme);
+		setTheme(theme === "dark" ? "light" : "dark");
 	};
 
 	return (
@@ -60,7 +43,7 @@ export default function PublicNavbar() {
 						aria-label="Toggle theme"
 					>
 						{theme === "dark" ? (
-							<Monitor className="h-5 w-5" />
+							<Sun className="h-5 w-5" />
 						) : (
 							<Moon className="h-5 w-5" />
 						)}
