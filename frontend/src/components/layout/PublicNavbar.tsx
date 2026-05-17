@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Search, Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 
 export default function PublicNavbar() {
 	const { theme, setTheme } = useTheme();
