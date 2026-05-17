@@ -52,7 +52,16 @@ async function proxyRequest(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const backendResponse = await fetch(targetUrl, init);
+    // 20s timeout - apparently, cold-starts can take ~7s.
+    // need to get my sub up.
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20_000);
+
+    const backendResponse = await fetch(targetUrl, {
+      ...init,
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
     const responseBody = await backendResponse.text();
 
     // Create a NextResponse that mirrors the backend response.
