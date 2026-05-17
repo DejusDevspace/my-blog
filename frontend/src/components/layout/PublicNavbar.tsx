@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Search, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
+import { Search, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export default function PublicNavbar() {
 	const { theme, setTheme } = useTheme();
@@ -13,10 +15,7 @@ export default function PublicNavbar() {
 	useEffect(() => setMounted(true), []);
 
 	const toggleTheme = () => {
-		const newTheme = theme === "dark" ? "light" : "dark";
-		setTheme(newTheme);
-		localStorage.setItem("theme", newTheme);
-		document.documentElement.setAttribute("data-theme", newTheme);
+		setTheme(theme === "dark" ? "light" : "dark");
 	};
 
 	return (

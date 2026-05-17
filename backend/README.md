@@ -13,6 +13,7 @@ FastAPI backend for my personal AI-powered blog and knowledge hub. Handles conte
 | **PyJWT**             | JWT decoding for NextAuth.js admin auth                  |
 | **Pydantic v2**       | Request/response validation and settings                 |
 | **uv**                | Python package manager                                   |
+| **Cloudinary**        | Image hosting for blog posts                             |
 
 ## Architecture
 
@@ -88,6 +89,9 @@ Edit `.env` with your values:
 ```env
 DATABASE_URL=postgresql+asyncpg://user:pass@host/dbname
 NEXTAUTH_SECRET=your-secret-here
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
 ```
 
 > Generate a secret with: `openssl rand -base64 32`
@@ -171,6 +175,7 @@ backend/
     │   ├── public_comments.py          # POST /comments, GET /posts/{slug}/comments
     │   ├── admin_posts.py              # Admin post CRUD
     │   ├── admin_categories.py         # Admin category CRUD
+    │   ├── admin_uploads.py            # Admin Cloudinary uploads
     │   └── admin_comments.py           # Admin comment deletion
     └── middleware/
         └── rate_limit.py               # IP-based rate limiting (3 comments/hr)
