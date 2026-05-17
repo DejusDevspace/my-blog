@@ -1,25 +1,16 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Moon, Monitor } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Search, Moon, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export default function PublicNavbar() {
-	const [theme, setTheme] = useState<"light" | "dark">("dark");
+	const { theme, setTheme } = useTheme();
+	const [mounted, setMounted] = useState(false);
 
-	// Initial theme setup (simplified for now, assumes dark is default as per spec)
-	useEffect(() => {
-		const stored = localStorage.getItem("theme");
-		if (stored === "light") {
-			// eslint-disable-next-line react-hooks/set-state-in-effect
-			setTheme("light");
-			document.documentElement.setAttribute("data-theme", "light");
-		} else {
-			// eslint-disable-next-line react-hooks/set-state-in-effect
-			setTheme("dark");
-			document.documentElement.setAttribute("data-theme", "dark");
-		}
-	}, []);
+	// Avoid hydration mismatch — theme is undefined on the server.
+	useEffect(() => setMounted(true), []);
 
 	const toggleTheme = () => {
 		const newTheme = theme === "dark" ? "light" : "dark";
@@ -59,10 +50,14 @@ export default function PublicNavbar() {
 						className="rounded-md p-2 text-text-secondary hover:bg-bg-elevated hover:text-text-primary transition-colors"
 						aria-label="Toggle theme"
 					>
-						{theme === "dark" ? (
-							<Monitor className="h-5 w-5" />
+						{mounted ? (
+							theme === "dark" ? (
+								<Sun className="h-5 w-5" />
+							) : (
+								<Moon className="h-5 w-5" />
+							)
 						) : (
-							<Moon className="h-5 w-5" />
+							<div className="h-5 w-5" />
 						)}
 					</button>
 

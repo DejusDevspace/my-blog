@@ -25,7 +25,7 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" suppressHydrationWarning>
+		<html lang="en" suppressHydrationWarning data-scroll-behavior="smooth">
 			<body className="min-h-screen bg-bg-page text-text-primary font-body antialiased">
 				<Providers>{children}</Providers>
 			</body>
