@@ -8,7 +8,7 @@ import ReadingProgress from "@/components/blog/ReadingProgress";
 export async function generateMetadata({
 	params,
 }: {
-	params: { slug: string };
+	params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
 	const { slug } = await params;
 
@@ -36,7 +36,7 @@ export async function generateMetadata({
 export default async function PostPage({
 	params,
 }: {
-	params: { slug: string };
+	params: Promise<{ slug: string }>;
 }) {
 	const { slug } = await params;
 

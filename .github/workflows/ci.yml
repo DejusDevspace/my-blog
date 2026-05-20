@@ -34,6 +34,12 @@ jobs:
 
       - name: Verify app imports cleanly
         run: uv run python -c "from main import app; print('✓ App imported successfully')"
+        env:
+          DATABASE_URL: postgresql+asyncpg://user:pass@localhost/db
+          NEXTAUTH_SECRET: ci-dummy-secret
+          CLOUDINARY_CLOUD_NAME: ci-dummy-name
+          CLOUDINARY_API_KEY: ci-dummy-key
+          CLOUDINARY_API_SECRET: ci-dummy-secret
 
   # ── Frontend ─────────────────────────────────────────────────────────────
   frontend:
