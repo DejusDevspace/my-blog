@@ -92,6 +92,38 @@ export async function getPostBySlug(slug: string): Promise<Post> {
 }
 
 /* ============================================================================
+  Public — Search
+============================================================================ */
+
+export interface SearchResult {
+  post: {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+  };
+  matched_chunk: string;
+  similarity: number;
+}
+
+export interface SemanticSearchResponse {
+  query: string;
+  results: SearchResult[];
+}
+
+/** Perform semantic search over published posts. */
+export async function semanticSearch(
+  query: string,
+  limit: number = 10,
+): Promise<SemanticSearchResponse> {
+  const { data } = await apiClient.get<SemanticSearchResponse>(
+    "/search/semantic",
+    { params: { q: query, limit } },
+  );
+  return data;
+}
+
+/* ============================================================================
   Public — Comments
 ============================================================================ */
 
