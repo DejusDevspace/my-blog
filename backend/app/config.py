@@ -23,6 +23,9 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str
     CLOUDINARY_API_SECRET: str
 
+    # --- HuggingFace (Embeddings) ---
+    HUGGINGFACE_TOKEN: str = ""
+
     # --- Application ---
     environment: str = "development"
     cors_origins: str = "http://localhost:3000"
