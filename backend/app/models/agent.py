@@ -10,21 +10,31 @@ from datetime import datetime
 from sqlalchemy import Boolean, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
+from pgvector.sqlalchemy import Vector
 
 from app.db.base import Base
 
 
 class PostEmbedding(Base):
-    """Vector embeddings for semantic search over posts (Phase 2)."""
+    """Vector embeddings for semantic search over posts.
+
+    Each row represents one chunk of a post. Chunk 0 is the title + excerpt,
+    subsequent chunks cover the body content in ~1000-token segments with
+    overlap so that no context is lost at boundaries.
+    """
 
     __tablename__ = "post_embeddings"
 
     post_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("posts.id", ondelete="CASCADE"),
         nullable=False,
+        index=True,
     )
-    # embedding column is VECTOR(1536) — added via raw SQL in migration
-    # since pgvector types require the extension to be enabled first.
+    chunk_index: Mapped[int] = mapped_column(
+        Integer, nullable=False, default=0,
+    )
+    chunk_text: Mapped[str] = mapped_column(Text, nullable=False)
+    embedding = mapped_column(Vector(384), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         default=datetime.now,
         nullable=False,
@@ -32,7 +42,7 @@ class PostEmbedding(Base):
 
 
 class ContextEmbedding(Base):
-    """Vector embeddings for author context fields (Phase 2)."""
+    """Vector embeddings for author context fields."""
 
     __tablename__ = "context_embeddings"
 
