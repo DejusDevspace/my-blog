@@ -72,9 +72,15 @@ export default function HomeFeedClient() {
 	const hasMore = data ? data.page < data.pages : false;
 	const hasActiveFilters = activeCategory || activeTag || activeSeries;
 
+	// Track if we've completed at least one load to avoid full-page reloads on filter changes
+	const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+	useEffect(() => {
+		if (data) setHasLoadedOnce(true);
+	}, [data]);
+
 	// Full-page skeleton while the very first fetch is in-flight.
-	// Nothing hardcoded (hero, sidebar, filters) renders until data arrives.
-	if (isLoading && page === 1) {
+	// Nothing hardcoded (hero, sidebar, filters) renders until data arrives for the first time.
+	if (isLoading && !hasLoadedOnce) {
 		return (
 			<div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 py-12 lg:flex-row lg:px-8">
 				{/* Sidebar skeleton — desktop only */}
@@ -174,6 +180,15 @@ export default function HomeFeedClient() {
 						<p className="text-text-secondary">
 							Something went wrong. Try refreshing.
 						</p>
+					</div>
+				) : isFetching && allPosts.length === 0 ? (
+					<div className="flex flex-col gap-5 mt-2">
+						{[1, 2, 3, 4].map((i) => (
+							<div
+								key={i}
+								className="h-48 w-full rounded-xl border border-border-subtle bg-bg-surface p-6 skeleton"
+							/>
+						))}
 					</div>
 				) : allPosts.length === 0 ? (
 					<div className="flex flex-col items-center justify-center py-20 text-center">
