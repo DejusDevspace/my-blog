@@ -24,7 +24,9 @@ export default function PublicNavbar() {
 	// Search state
 	const [searchQuery, setSearchQuery] = useState("");
 	const [isSearchOpen, setIsSearchOpen] = useState(false);
-	const searchContainerRef = useRef<HTMLDivElement>(null);
+	const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
+	const desktopSearchRef = useRef<HTMLDivElement>(null);
+	const mobileSearchRef = useRef<HTMLDivElement>(null);
 	const debouncedQuery = useDebounce(searchQuery, 400);
 
 	// Avoid hydration mismatch — theme is undefined on the server.
@@ -33,10 +35,13 @@ export default function PublicNavbar() {
 	// Handle clicking outside the search dropdown to close it.
 	useEffect(() => {
 		function handleClickOutside(event: MouseEvent) {
-			if (
-				searchContainerRef.current &&
-				!searchContainerRef.current.contains(event.target as Node)
-			) {
+			const target = event.target as Node;
+			const isOutsideDesktop =
+				!desktopSearchRef.current || !desktopSearchRef.current.contains(target);
+			const isOutsideMobile =
+				!mobileSearchRef.current || !mobileSearchRef.current.contains(target);
+
+			if (isOutsideDesktop && isOutsideMobile) {
 				setIsSearchOpen(false);
 			}
 		}
@@ -55,9 +60,76 @@ export default function PublicNavbar() {
 		setTheme(theme === "dark" ? "light" : "dark");
 	};
 
+	const renderSearchBar = (
+		ref: React.RefObject<HTMLDivElement | null>,
+		isMobile: boolean = false,
+	) => (
+		<div className={`relative w-full ${isMobile ? "" : "max-w-xl"}`} ref={ref}>
+			<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
+			<input
+				type="text"
+				placeholder="Search posts..."
+				className="input w-full bg-bg-page pl-10!"
+				value={searchQuery}
+				onChange={(e) => {
+					setSearchQuery(e.target.value);
+					setIsSearchOpen(true);
+				}}
+				onFocus={() => {
+					if (searchQuery.length >= 2) setIsSearchOpen(true);
+				}}
+				autoFocus={isMobile}
+			/>
+
+			{/* Search Dropdown */}
+			{isSearchOpen && debouncedQuery.length >= 2 && (
+				<div className="absolute top-full left-0 mt-2 w-full rounded-md border border-border-subtle bg-bg-elevated shadow-xl overflow-hidden z-50">
+					{isSearchLoading ? (
+						<div className="flex items-center justify-center p-4 text-text-tertiary">
+							<Loader2 className="h-5 w-5 animate-spin mr-2" />
+							<span>Searching context...</span>
+						</div>
+					) : searchData?.results && searchData.results.length > 0 ? (
+						<ul className="max-h-96 overflow-y-auto py-2">
+							{searchData.results.map((hit) => (
+								<li key={hit.post.id}>
+									<Link
+										href={`/posts/${hit.post.slug}`}
+										className="block px-4 py-3 hover:bg-bg-subtle transition-colors border-b border-border-subtle last:border-0"
+										onClick={() => {
+											setIsSearchOpen(false);
+											setSearchQuery("");
+											if (isMobile) setIsMobileSearchOpen(false);
+										}}
+									>
+										<div className="flex justify-between items-start mb-1">
+											<span className="font-semibold text-text-primary text-sm line-clamp-1">
+												{hit.post.title}
+											</span>
+											<span className="text-xs font-mono text-accent ml-2 whitespace-nowrap bg-accent-muted px-1.5 py-0.5 rounded">
+												{Math.round(hit.similarity * 100)}% match
+											</span>
+										</div>
+										<p className="text-xs text-text-secondary line-clamp-2 mt-1 italic">
+											"{hit.matched_chunk}"
+										</p>
+									</Link>
+								</li>
+							))}
+						</ul>
+					) : (
+						<div className="p-4 text-center text-sm text-text-secondary">
+							No semantic matches found for "{debouncedQuery}".
+						</div>
+					)}
+				</div>
+			)}
+		</div>
+	);
+
 	return (
-		<nav className="sticky top-0 z-50 h-16 w-full border-b border-border-subtle bg-bg-surface">
-			<div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4 lg:px-8">
+		<nav className="sticky top-0 z-50 w-full border-b border-border-subtle bg-bg-surface">
+			<div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 lg:px-8">
 				{/* Brand */}
 				<Link
 					href="/"
@@ -69,69 +141,19 @@ export default function PublicNavbar() {
 
 				{/* Center: Search (Desktop) */}
 				<div className="hidden md:flex flex-1 items-center justify-center px-8">
-					<div className="relative w-full max-w-xl" ref={searchContainerRef}>
-						<Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-tertiary" />
-						<input
-							type="text"
-							placeholder="Search posts..."
-							className="input w-full bg-bg-page pl-10!"
-							value={searchQuery}
-							onChange={(e) => {
-								setSearchQuery(e.target.value);
-								setIsSearchOpen(true);
-							}}
-							onFocus={() => {
-								if (searchQuery.length >= 2) setIsSearchOpen(true);
-							}}
-						/>
-
-						{/* Search Dropdown */}
-						{isSearchOpen && debouncedQuery.length >= 2 && (
-							<div className="absolute top-full left-0 mt-2 w-full rounded-md border border-border-subtle bg-bg-elevated shadow-xl overflow-hidden z-50">
-								{isSearchLoading ? (
-									<div className="flex items-center justify-center p-4 text-text-tertiary">
-										<Loader2 className="h-5 w-5 animate-spin mr-2" />
-										<span>Searching context...</span>
-									</div>
-								) : searchData?.results && searchData.results.length > 0 ? (
-									<ul className="max-h-96 overflow-y-auto py-2">
-										{searchData.results.map((hit) => (
-											<li key={hit.post.id}>
-												<Link
-													href={`/posts/${hit.post.slug}`}
-													className="block px-4 py-3 hover:bg-bg-subtle transition-colors border-b border-border-subtle last:border-0"
-													onClick={() => {
-														setIsSearchOpen(false);
-														setSearchQuery("");
-													}}
-												>
-													<div className="flex justify-between items-start mb-1">
-														<span className="font-semibold text-text-primary text-sm line-clamp-1">
-															{hit.post.title}
-														</span>
-														<span className="text-xs font-mono text-accent ml-2 whitespace-nowrap bg-accent-muted px-1.5 py-0.5 rounded">
-															{Math.round(hit.similarity * 100)}% match
-														</span>
-													</div>
-													<p className="text-xs text-text-secondary line-clamp-2 mt-1 italic">
-														"{hit.matched_chunk}"
-													</p>
-												</Link>
-											</li>
-										))}
-									</ul>
-								) : (
-									<div className="p-4 text-center text-sm text-text-secondary">
-										No semantic matches found for "{debouncedQuery}".
-									</div>
-								)}
-							</div>
-						)}
-					</div>
+					{renderSearchBar(desktopSearchRef, false)}
 				</div>
 
 				{/* Right: Actions */}
-				<div className="flex items-center gap-4">
+				<div className="flex items-center gap-2 md:gap-4">
+					<button
+						className="md:hidden rounded-md p-2 text-text-secondary hover:bg-bg-elevated hover:text-text-primary transition-colors"
+						onClick={() => setIsMobileSearchOpen(!isMobileSearchOpen)}
+						aria-label="Toggle mobile search"
+					>
+						<Search className="h-5 w-5" />
+					</button>
+
 					<button
 						onClick={toggleTheme}
 						className="rounded-md p-2 text-text-secondary hover:bg-bg-elevated hover:text-text-primary transition-colors"
@@ -158,6 +180,13 @@ export default function PublicNavbar() {
 					</a>
 				</div>
 			</div>
+
+			{/* Mobile Search Panel */}
+			{isMobileSearchOpen && (
+				<div className="md:hidden border-t border-border-subtle bg-bg-surface px-4 py-3 shadow-md">
+					{renderSearchBar(mobileSearchRef, true)}
+				</div>
+			)}
 		</nav>
 	);
 }
