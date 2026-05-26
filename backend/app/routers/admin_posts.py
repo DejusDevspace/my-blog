@@ -4,7 +4,7 @@ import math
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import get_current_admin
@@ -13,6 +13,7 @@ from app.models.owner import Owner
 from app.schemas.common import MessageResponse, PaginatedResponse
 from app.schemas.post import PostCreate, PostListItem, PostResponse, PostUpdate
 from app.services import post_service
+from app.services.embedding_service import generate_embeddings_background
 
 router = APIRouter(
     prefix="/admin/posts",
@@ -65,9 +66,12 @@ async def create_post(
     data: PostCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
     admin: Annotated[Owner, Depends(get_current_admin)],
+    background_tasks: BackgroundTasks,
 ):
     """Create a new post."""
-    return await post_service.create_post(db, data, admin.id)
+    post = await post_service.create_post(db, data, admin.id)
+    background_tasks.add_task(generate_embeddings_background, post.id)
+    return post
 
 
 @router.patch("/{post_id}", response_model=PostResponse)
@@ -75,6 +79,7 @@ async def update_post(
     post_id: uuid.UUID,
     data: PostUpdate,
     db: Annotated[AsyncSession, Depends(get_db)],
+    background_tasks: BackgroundTasks,
 ):
     """Update an existing post."""
     post = await post_service.update_post(db, post_id, data)
@@ -83,6 +88,10 @@ async def update_post(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Post not found.",
         )
+    # Re-generate embeddings if content or title changed.
+    update_fields = data.model_dump(exclude_unset=True)
+    if any(f in update_fields for f in ("title", "content")):
+        background_tasks.add_task(generate_embeddings_background, post.id)
     return post
 
 
