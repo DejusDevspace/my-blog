@@ -501,7 +501,7 @@ export default function PostEditorClient({
 								onChange={(e) => handleChange("slug", e.target.value)}
 							/>
 							<div className="font-mono text-[0.65rem] text-text-tertiary">
-								https://d3jus.dev/blog/{data.slug || "..."}
+								https://dejusdevspace.vercel.app/posts/{data.slug || "..."}
 							</div>
 						</div>
 
