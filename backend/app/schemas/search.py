@@ -26,6 +26,10 @@ class SearchResult(BaseModel):
     similarity: float = Field(
         ..., description="Cosine similarity score (0-1, higher is better)."
     )
+    highlighted_snippet: str | None = Field(
+        None,
+        description="Optional FTS-generated excerpt with <mark> tags around matched terms.",
+    )
 
 
 class SemanticSearchResponse(BaseModel):
