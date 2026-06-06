@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, Moon, Sun, Loader2 } from "lucide-react";
+import { Search, Moon, Sun, Loader2, Layers } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useQuery } from "@tanstack/react-query";
 import { semanticSearch } from "@/services/api";
@@ -111,9 +111,13 @@ export default function PublicNavbar() {
 													{Math.round(hit.aggregated_score * 100)}% match
 												</span>
 												{hit.match_type !== "semantic" && (
-													<span className={`text-[0.6rem] font-mono uppercase tracking-wider px-1 py-0.5 rounded-sm ${
-														hit.match_type === "hybrid" ? "text-info bg-info-muted" : "text-warning bg-warning-muted"
-													}`}>
+													<span
+														className={`text-[0.6rem] font-mono uppercase tracking-wider px-1 py-0.5 rounded-sm ${
+															hit.match_type === "hybrid"
+																? "text-info bg-info-muted"
+																: "text-warning bg-warning-muted"
+														}`}
+													>
 														{hit.match_type}
 													</span>
 												)}
@@ -188,6 +192,14 @@ export default function PublicNavbar() {
 						)}
 					</button>
 
+					<Link
+						href="/series"
+						className="hidden md:inline-flex items-center gap-1.5 rounded border border-border-default px-3 py-1.5 font-mono text-sm text-text-secondary hover:border-accent hover:text-accent transition-colors"
+					>
+						<Layers size={12} />
+						Series
+					</Link>
+
 					<a
 						href="https://github.com/DejusDevspace/my-blog"
 						target="_blank"
@@ -203,6 +215,16 @@ export default function PublicNavbar() {
 			{isMobileSearchOpen && (
 				<div className="md:hidden border-t border-border-subtle bg-bg-surface px-4 py-3 shadow-md">
 					{renderSearchBar(mobileSearchRef, true)}
+					<div className="mt-3 flex items-center gap-3 border-t border-border-subtle pt-3">
+						<Link
+							href="/series"
+							className="flex items-center gap-1.5 text-sm font-mono text-text-secondary hover:text-accent transition-colors"
+							onClick={() => setIsMobileSearchOpen(false)}
+						>
+							<Layers size={12} />
+							Series
+						</Link>
+					</div>
 				</div>
 			)}
 		</nav>
