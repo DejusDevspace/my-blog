@@ -33,7 +33,7 @@ export default function PostDetailClient({ post }: PostDetailClientProps) {
 					Home
 				</Link>
 				<span className="mx-2">/</span>
-				<Link href="/blog" className="hover:text-accent transition-colors">
+				<Link href="/" className="hover:text-accent transition-colors">
 					Blog
 				</Link>
 				<span className="mx-2">/</span>

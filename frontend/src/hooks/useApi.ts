@@ -34,6 +34,8 @@ import type {
   Tag,
   TagCreate,
   TagUpdate,
+  UserContext,
+  UserContextUpdate,
 } from "@/types";
 import * as api from "@/services/api";
 import type { ListPostsParams, AdminListPostsParams } from "@/services/api";
@@ -81,6 +83,9 @@ export const queryKeys = {
     },
     tags: {
       all: ["admin", "tags"] as const,
+    },
+    context: {
+      all: ["admin", "context"] as const,
     },
   },
   tags: {
@@ -479,6 +484,36 @@ export function useAdminDeleteTag(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+    },
+    ...options,
+  });
+}
+
+/* ============================================================================
+  Admin — Context
+============================================================================ */
+
+/** (Admin) Fetch the owner's context profile. */
+export function useAdminContext(
+  options?: Partial<UseQueryOptions<UserContext, ApiError>>,
+) {
+  return useQuery<UserContext, ApiError>({
+    queryKey: queryKeys.admin.context.all,
+    queryFn: api.adminGetContext,
+    staleTime: STALE.taxonomy,
+    ...options,
+  });
+}
+
+/** (Admin) Update the owner's context profile. */
+export function useAdminUpdateContext(
+  options?: UseMutationOptions<UserContext, ApiError, UserContextUpdate>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<UserContext, ApiError, UserContextUpdate>({
+    mutationFn: api.adminUpdateContext,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.context.all });
     },
     ...options,
   });

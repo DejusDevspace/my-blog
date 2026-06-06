@@ -26,6 +26,8 @@ import type {
   Tag,
   TagCreate,
   TagUpdate,
+  UserContext,
+  UserContextUpdate,
 } from "@/types";
 
 /* ============================================================================
@@ -88,6 +90,41 @@ export async function listPublishedPosts(
 /** Fetch a single published post by slug. */
 export async function getPostBySlug(slug: string): Promise<Post> {
   const { data } = await apiClient.get<Post>(`/posts/${slug}`);
+  return data;
+}
+
+/* ============================================================================
+  Public — Search
+============================================================================ */
+
+export interface SearchResult {
+  post: {
+    id: string;
+    title: string;
+    slug: string;
+    excerpt: string | null;
+  };
+  matched_chunk: string;
+  similarity: number;
+  aggregated_score: number;
+  match_type: "hybrid" | "semantic" | "keyword";
+  highlighted_snippet?: string | null;
+}
+
+export interface SemanticSearchResponse {
+  query: string;
+  results: SearchResult[];
+}
+
+/** Perform semantic search over published posts. */
+export async function semanticSearch(
+  query: string,
+  limit: number = 10,
+): Promise<SemanticSearchResponse> {
+  const { data } = await apiClient.get<SemanticSearchResponse>(
+    "/search/semantic",
+    { params: { q: query, limit } },
+  );
   return data;
 }
 
@@ -307,6 +344,24 @@ export async function adminDeleteComment(
   const { data } = await apiClient.delete<MessageResponse>(
     `/admin/comments/${commentId}`,
   );
+  return data;
+}
+
+/* ============================================================================
+  Admin — Context
+============================================================================ */
+
+/** (Admin) Retrieve the owner's context profile. */
+export async function adminGetContext(): Promise<UserContext> {
+  const { data } = await apiClient.get<UserContext>("/admin/context");
+  return data;
+}
+
+/** (Admin) Create or update the owner's context profile. */
+export async function adminUpdateContext(
+  payload: UserContextUpdate,
+): Promise<UserContext> {
+  const { data } = await apiClient.put<UserContext>("/admin/context", payload);
   return data;
 }
 
