@@ -15,9 +15,11 @@ The frontend for my personal AI-powered blog and knowledge hub. Built with Next.
 
 ## Features
 
-- **Public Blog**: View posts, categories, tags, and series.
+- **Public Blog**: View posts filtered by category, tag, or series.
+- **Hybrid Search**: Debounced search bar with semantic + FTS results, aggregated relevance scoring, and highlighted snippets.
 - **Admin Dashboard**: Full CMS for managing posts, categories, tags, series, and comments.
 - **Markdown Editor**: Rich text editing with BlockNote, supporting code blocks and image uploads via Cloudinary.
+- **Admin Settings**: Context management interface for AI agent personalisation (bio, interests, learning focus, lifestyle).
 - **Cyber-Luxury Aesthetic**: Custom dark theme with neon accents, smooth gradients, and glassmorphism elements.
 - **API Proxy**: Next.js proxy route (`/api/proxy`) to forward requests to the FastAPI backend, handling authentication transparently.
 
@@ -48,9 +50,9 @@ ADMIN_PASSWORD=admin
 
 ## Architecture Highlights
 
-- **`src/app`**: Next.js App Router pages and layouts.
+- **`src/app`**: Next.js App Router pages and layouts, organised into public and admin route groups.
 - **`src/app/api/proxy`**: Proxies requests to the backend. Handles `multipart/form-data` for image uploads.
-- **`src/components`**: Reusable UI components, editor components, and blog layouts.
+- **`src/components`**: Reusable UI components, editor components, blog layouts, settings forms, and feed filtering.
 - **`src/services/api.ts`**: API wrapper functions that interface with the backend via `apiClient.ts`.
 - **`src/hooks/useApi.ts`**: React Query hooks for fetching and mutating data.
 - **`src/types`**: TypeScript interfaces that mirror backend Pydantic schemas.
