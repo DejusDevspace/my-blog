@@ -1,6 +1,7 @@
-"""Search service — vector similarity queries against post embeddings."""
+"""Search service — hybrid vector + full‑text search against posts."""
 
 import logging
+import re
 
 from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,27 +14,94 @@ from app.services.embedding_service import get_embeddings
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------------------------
+# FTS snippet post-processing
+# ---------------------------------------------------------------------------
+
+_MARK_PATTERN = re.compile(r"</?mark>")  # placeholder-safe pattern
+
+
+def _clean_fts_snippet(snippet: str) -> str:
+    """Strip markdown formatting from a ``ts_headline`` snippet while
+    preserving ``<mark>`` / ``</mark>`` tags intact."""
+    if not snippet:
+        return snippet
+
+    # 1. Temporarily replace <mark> and </mark> with placeholders.
+    parts: list[str] = []
+    last_end = 0
+    for m in _MARK_PATTERN.finditer(snippet):
+        parts.append(snippet[last_end : m.start()])
+        parts.append(f"\x00{m.group()}\x00")
+        last_end = m.end()
+    parts.append(snippet[last_end:])
+
+    # 2. Strip markdown from the non‑placeholder segments.
+    cleaned_parts: list[str] = []
+    for part in parts:
+        if part.startswith("\x00<") and part.endswith(">\x00"):
+            # Restore the <mark> or </mark> tag.
+            cleaned_parts.append(part.replace("\x00", ""))
+            continue
+
+        t = part
+        # Remove images: ![alt](url)
+        t = re.sub(r"!\[([^\]]*)\]\([^)]+\)", r"\1", t)
+        # Remove links but keep link text: [text](url)
+        t = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", t)
+        # Remove fenced code blocks entirely.
+        t = re.sub(r"```[\s\S]*?```", "", t)
+        # Remove heading markers.
+        t = re.sub(r"^#{1,6}\s+", "", t, flags=re.MULTILINE)
+        # Remove bold / italic markers (paired and unpaired).
+        t = re.sub(r"\*\*([^*]*)\*\*", r"\1", t)
+        t = re.sub(r"\*\*", "", t)
+        t = re.sub(r"__([^_]*)__", r"\1", t)
+        t = re.sub(r"__", "", t)
+        t = re.sub(r"(?<!\*)\*([^*]+)\*(?!\*)", r"\1", t)
+        t = re.sub(r"(?<!_)_([^_]+)_(?!_)", r"\1", t)
+        # Remove inline code backticks.
+        t = re.sub(r"`([^`]+)`", r"\1", t)
+        # Collapse whitespace (no strip — preserve inter-part spacing).
+        t = re.sub(r"\s+", " ", t)
+
+        cleaned_parts.append(t)
+
+    result = "".join(cleaned_parts)
+    # Collapse whitespace across tag boundaries and trim.
+    result = re.sub(r"\s+", " ", result).strip()
+    # Ensure a space before <mark> and after </mark> when adjacent to text.
+    result = re.sub(r"(\S)<mark>", r"\1 <mark>", result)
+    result = re.sub(r"</mark>(\S)", r"</mark> \1", result)
+    return result
+
+
 async def semantic_search(
     db: AsyncSession,
     query: str,
     *,
     limit: int = 10,
 ) -> list[SearchResult]:
-    """Embed the query and find the closest post chunks via cosine similarity.
+    """Hybrid search: vector (semantic) + full‑text (keyword) merged together.
 
-    Results are deduplicated by post — only the best-matching chunk per post
-    is returned, ordered by similarity (highest first).
+    1. **Vector search** – embed the query and find closest post chunks via
+       cosine similarity (existing behaviour).
+    2. **Full‑text search** – use PostgreSQL ``tsvector`` /
+       ``ts_headline()`` to find keyword matches and generate highlighted
+       excerpts.  Snippets are post‑processed to remove markdown formatting.
+    3. **Merge** – attach ``highlighted_snippet`` to vector results that also
+       matched FTS; append any FTS‑only results at the end.
     """
-    # Generate the query embedding.
+    # -------------------------------------------------------------------
+    # 1. Vector search
+    # -------------------------------------------------------------------
     vectors = await get_embeddings([query])
     if not vectors:
         return []
 
     query_vector = vectors[0]
 
-    # Build the similarity query.
-    # We use (1 - cosine_distance) to get a similarity score in [0, 1].
-    stmt = (
+    vector_stmt = (
         select(
             PostEmbedding.post_id,
             PostEmbedding.chunk_text,
@@ -50,26 +118,68 @@ async def semantic_search(
             Post.status == "published",
             Post.deleted_at.is_(None),
             PostEmbedding.embedding.is_not(None),
-            # (1 - PostEmbedding.embedding.cosine_distance(query_vector)),
         )
         .order_by(text("similarity DESC"))
-        .limit(limit * 3)  # Over-fetch to allow deduplication.
+        .limit(limit * 3)
     )
 
-    result = await db.execute(stmt)
-    rows = result.all()
+    vector_result = await db.execute(vector_stmt)
+    vector_rows = vector_result.all()
 
-    # Deduplicate by post — keep the chunk with highest similarity.
-    seen_posts: set = set()
+    # -------------------------------------------------------------------
+    # 2. Full‑text search
+    # -------------------------------------------------------------------
+    fts_by_post: dict = {}
+    try:
+        fts_stmt = text("""
+            SELECT
+                p.id,
+                p.title,
+                p.slug,
+                p.excerpt,
+                ts_headline('english',
+                    coalesce(p.title, '') || ' ' || coalesce(p.content, ''),
+                    plainto_tsquery('english', :q),
+                    'StartSel=<mark>, StopSel=</mark>, '
+                    'MaxWords=40, MinWords=10, ShortWord=0, MaxFragments=1')
+                AS snippet,
+                ts_rank(p.search_vector,
+                    plainto_tsquery('english', :q)) AS rank
+            FROM posts p
+            WHERE p.status = 'published'
+              AND p.deleted_at IS NULL
+              AND p.search_vector @@ plainto_tsquery('english', :q)
+            ORDER BY rank DESC
+            LIMIT :lim
+        """)
+        fts_result = await db.execute(fts_stmt, {"q": query, "lim": limit})
+        for row in fts_result:
+            if row.id is not None:
+                fts_by_post[row.id] = {
+                    "title": row.title,
+                    "slug": row.slug,
+                    "excerpt": row.excerpt,
+                    "snippet": _clean_fts_snippet(row.snippet) if row.snippet else None,
+                }
+    except Exception:
+        logger.exception("FTS query failed — falling back to vector‑only search")
+
+    # -------------------------------------------------------------------
+    # 3. Merge
+    # -------------------------------------------------------------------
+    seen: set = set()
     results: list[SearchResult] = []
 
-    for row in rows:
-        # if float(row.similarity) < 0.20:
-        #     break
-
-        if row.post_id in seen_posts:
+    # 3a — Vector results first, with FTS snippet attached when available.
+    for row in vector_rows:
+        if row.post_id in seen:
             continue
-        seen_posts.add(row.post_id)
+        seen.add(row.post_id)
+
+        snippet = None
+        if row.post_id in fts_by_post:
+            snippet = fts_by_post[row.post_id]["snippet"]
+            del fts_by_post[row.post_id]
 
         results.append(
             SearchResult(
@@ -81,12 +191,30 @@ async def semantic_search(
                 ),
                 matched_chunk=row.chunk_text,
                 similarity=round(float(row.similarity), 4),
+                highlighted_snippet=snippet,
+            )
+        )
+
+        if len(results) >= limit:
+            return results
+
+    # 3b — Remaining FTS‑only results (those not already in vector results).
+    for post_id, fts_row in fts_by_post.items():
+        results.append(
+            SearchResult(
+                post=SearchResultPost(
+                    id=post_id,
+                    title=fts_row["title"],
+                    slug=fts_row["slug"],
+                    excerpt=fts_row["excerpt"],
+                ),
+                matched_chunk="",
+                similarity=0.0,
+                highlighted_snippet=fts_row["snippet"],
             )
         )
 
         if len(results) >= limit:
             break
-
-    print("SEARCH RESULTS:", results)
 
     return results
