@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Search, Moon, Sun } from "lucide-react";
+import { Search, Moon, Sun, Loader2, Layers } from "lucide-react";
 import { useTheme } from "next-themes";
 
 export default function PublicNavbar() {
@@ -58,6 +58,14 @@ export default function PublicNavbar() {
 						)}
 					</button>
 
+					<Link
+						href="/series"
+						className="hidden md:inline-flex items-center gap-1.5 rounded border border-border-default px-3 py-1.5 font-mono text-sm text-text-secondary hover:border-accent hover:text-accent transition-colors"
+					>
+						<Layers size={12} />
+						Series
+					</Link>
+
 					<a
 						href="https://github.com/DejusDevspace/my-blog"
 						target="_blank"
@@ -68,6 +76,23 @@ export default function PublicNavbar() {
 					</a>
 				</div>
 			</div>
+
+			{/* Mobile Search Panel */}
+			{isMobileSearchOpen && (
+				<div className="md:hidden border-t border-border-subtle bg-bg-surface px-4 py-3 shadow-md">
+					{renderSearchBar(mobileSearchRef, true)}
+					<div className="mt-3 flex items-center gap-3 border-t border-border-subtle pt-3">
+						<Link
+							href="/series"
+							className="flex items-center gap-1.5 text-sm font-mono text-text-secondary hover:text-accent transition-colors"
+							onClick={() => setIsMobileSearchOpen(false)}
+						>
+							<Layers size={12} />
+							Series
+						</Link>
+					</div>
+				</div>
+			)}
 		</nav>
 	);
 }

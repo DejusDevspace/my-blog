@@ -159,7 +159,7 @@ function SeriesNav({ series, currentPostId }: SeriesNavProps) {
 				</h3>
 			</div>
 			<Link
-				href={`/?series=${series.slug}`}
+				href={`/series/${series.slug}`}
 				className="mb-5 block font-display text-lg font-semibold text-text-primary transition-colors hover:text-accent"
 			>
 				{series.title}
