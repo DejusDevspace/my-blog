@@ -106,6 +106,7 @@ export interface SearchResult {
   };
   matched_chunk: string;
   similarity: number;
+  highlighted_snippet?: string | null;
 }
 
 export interface SemanticSearchResponse {

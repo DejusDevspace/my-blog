@@ -110,9 +110,18 @@ export default function PublicNavbar() {
 												{Math.round(hit.similarity * 100)}% match
 											</span>
 										</div>
-										<p className="text-xs text-text-secondary line-clamp-2 mt-1 italic">
-											"{hit.matched_chunk}"
-										</p>
+										{hit.highlighted_snippet ? (
+											<p
+												className="text-xs text-text-secondary line-clamp-3 mt-1 [&_mark]:bg-accent-muted [&_mark]:text-accent [&_mark]:rounded-sm [&_mark]:px-0.5"
+												dangerouslySetInnerHTML={{
+													__html: hit.highlighted_snippet,
+												}}
+											/>
+										) : (
+											<p className="text-xs text-text-secondary line-clamp-2 mt-1 italic">
+												"{hit.matched_chunk}"
+											</p>
+										)}
 									</Link>
 								</li>
 							))}

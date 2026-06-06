@@ -11,14 +11,15 @@ from app.db.base import engine
 from app.routers import (
     admin_categories,
     admin_comments,
+    admin_context,
     admin_posts,
     admin_series,
     admin_tags,
     admin_uploads,
+    debug,
     public_comments,
     public_posts,
     public_search,
-    admin_context,
 )
 
 
@@ -76,6 +77,7 @@ app.include_router(admin_tags.router, prefix=API_V1)
 app.include_router(admin_uploads.router, prefix=API_V1)
 app.include_router(admin_comments.router, prefix=API_V1)
 app.include_router(admin_context.router, prefix=API_V1)
+app.include_router(debug.router)
 
 
 # ---------------------------------------------------------------------------
