@@ -160,6 +160,7 @@ async def semantic_search(
                     "slug": row.slug,
                     "excerpt": row.excerpt,
                     "snippet": _clean_fts_snippet(row.snippet) if row.snippet else None,
+                    "rank": float(row.rank),
                 }
     except Exception:
         logger.exception("FTS query failed — falling back to vector‑only search")
@@ -170,16 +171,37 @@ async def semantic_search(
     seen: set = set()
     results: list[SearchResult] = []
 
-    # 3a — Vector results first, with FTS snippet attached when available.
+    # Normalise FTS ranks to 0-1 (divide by max rank across all FTS results).
+    all_ranks = [r["rank"] for r in fts_by_post.values()]
+    max_rank = max(all_ranks) if all_ranks else 1.0
+
+    def _normalise_rank(raw: float) -> float:
+        return raw / max_rank if max_rank > 0 else 0.0
+
+    # 3a — Vector results first, with FTS snippet + rank attached when available.
     for row in vector_rows:
         if row.post_id in seen:
             continue
         seen.add(row.post_id)
 
         snippet = None
+        fts_rank = 0.0
         if row.post_id in fts_by_post:
             snippet = fts_by_post[row.post_id]["snippet"]
+            fts_rank = fts_by_post[row.post_id]["rank"]
             del fts_by_post[row.post_id]
+
+        vec_sim = round(float(row.similarity), 4)
+
+        if fts_rank > 0:
+            # Both vector and keyword matched.
+            norm = _normalise_rank(fts_rank)
+            aggregated_score = max(vec_sim, norm)
+            match_type = "hybrid"
+        else:
+            # Vector only.
+            aggregated_score = vec_sim
+            match_type = "semantic"
 
         results.append(
             SearchResult(
@@ -190,7 +212,9 @@ async def semantic_search(
                     excerpt=row.excerpt,
                 ),
                 matched_chunk=row.chunk_text,
-                similarity=round(float(row.similarity), 4),
+                similarity=vec_sim,
+                aggregated_score=round(aggregated_score, 4),
+                match_type=match_type,
                 highlighted_snippet=snippet,
             )
         )
@@ -200,6 +224,10 @@ async def semantic_search(
 
     # 3b — Remaining FTS‑only results (those not already in vector results).
     for post_id, fts_row in fts_by_post.items():
+        norm = _normalise_rank(fts_row["rank"])
+        # Floor at 0.3 — a keyword match is always somewhat relevant.
+        aggregated_score = max(0.3, norm)
+
         results.append(
             SearchResult(
                 post=SearchResultPost(
@@ -210,6 +238,8 @@ async def semantic_search(
                 ),
                 matched_chunk="",
                 similarity=0.0,
+                aggregated_score=round(aggregated_score, 4),
+                match_type="keyword",
                 highlighted_snippet=fts_row["snippet"],
             )
         )

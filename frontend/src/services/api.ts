@@ -106,6 +106,8 @@ export interface SearchResult {
   };
   matched_chunk: string;
   similarity: number;
+  aggregated_score: number;
+  match_type: "hybrid" | "semantic" | "keyword";
   highlighted_snippet?: string | null;
 }
 

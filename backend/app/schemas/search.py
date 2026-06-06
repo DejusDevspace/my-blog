@@ -17,14 +17,22 @@ class SearchResultPost(BaseModel):
 
 
 class SearchResult(BaseModel):
-    """A single semantic search hit."""
+    """A single search hit, from vector (semantic) and/or full‑text search."""
 
     post: SearchResultPost
     matched_chunk: str = Field(
-        ..., description="The text chunk that best matched the query."
+        ..., description="The text chunk that best matched the query (vector)."
     )
     similarity: float = Field(
-        ..., description="Cosine similarity score (0-1, higher is better)."
+        ..., description="Vector cosine similarity score (0-1, higher is better)."
+    )
+    aggregated_score: float = Field(
+        ...,
+        description="Combined relevance score (0-1) taking both vector and FTS into account.",
+    )
+    match_type: str = Field(
+        ...,
+        description="How this result matched: 'hybrid', 'semantic', or 'keyword'.",
     )
     highlighted_snippet: str | None = Field(
         None,

@@ -106,8 +106,17 @@ export default function PublicNavbar() {
 											<span className="font-semibold text-text-primary text-sm line-clamp-1">
 												{hit.post.title}
 											</span>
-											<span className="text-xs font-mono text-accent ml-2 whitespace-nowrap bg-accent-muted px-1.5 py-0.5 rounded">
-												{Math.round(hit.similarity * 100)}% match
+											<span className="flex items-center gap-1.5 shrink-0">
+												<span className="text-xs font-mono text-accent whitespace-nowrap bg-accent-muted px-1.5 py-0.5 rounded">
+													{Math.round(hit.aggregated_score * 100)}% match
+												</span>
+												{hit.match_type !== "semantic" && (
+													<span className={`text-[0.6rem] font-mono uppercase tracking-wider px-1 py-0.5 rounded-sm ${
+														hit.match_type === "hybrid" ? "text-info bg-info-muted" : "text-warning bg-warning-muted"
+													}`}>
+														{hit.match_type}
+													</span>
+												)}
 											</span>
 										</div>
 										{hit.highlighted_snippet ? (
