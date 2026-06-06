@@ -26,6 +26,8 @@ import type {
   Tag,
   TagCreate,
   TagUpdate,
+  UserContext,
+  UserContextUpdate,
 } from "@/types";
 
 /* ============================================================================
@@ -339,6 +341,24 @@ export async function adminDeleteComment(
   const { data } = await apiClient.delete<MessageResponse>(
     `/admin/comments/${commentId}`,
   );
+  return data;
+}
+
+/* ============================================================================
+  Admin — Context
+============================================================================ */
+
+/** (Admin) Retrieve the owner's context profile. */
+export async function adminGetContext(): Promise<UserContext> {
+  const { data } = await apiClient.get<UserContext>("/admin/context");
+  return data;
+}
+
+/** (Admin) Create or update the owner's context profile. */
+export async function adminUpdateContext(
+  payload: UserContextUpdate,
+): Promise<UserContext> {
+  const { data } = await apiClient.put<UserContext>("/admin/context", payload);
   return data;
 }
 
