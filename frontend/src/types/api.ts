@@ -194,3 +194,24 @@ export interface CommentCreate {
   body: string;
   honeypot?: string;
 }
+
+/* ============================================================================
+  User Context
+============================================================================ */
+
+export interface UserContext {
+  id: string;
+  owner_id: string;
+  bio: string | null;
+  interests: string[];
+  learning_focus: string | null;
+  lifestyle_context: string | null;
+  updated_at: string;
+}
+
+export interface UserContextUpdate {
+  bio?: string | null;
+  interests?: string[];
+  learning_focus?: string | null;
+  lifestyle_context?: string | null;
+}
