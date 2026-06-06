@@ -23,10 +23,10 @@ export default function HeroSection({ totalPosts }: HeroSectionProps) {
 
 				{/* Sub-headline */}
 				<p className="max-w-2xl font-body text-body-lg text-text-secondary">
-					I'm just a boy finding his voice in a noisy world. Here, I'm a{" "}
-					<em>Full-Stack AI/ML Engineer</em>, and I document my projects,
-					lessons, ideas, thoughts, and basically, just <strong>ME</strong>.
-					Hope you find something for you!
+					I'm just another human finding my voice in a noisy world. Here, I'm a{" "}
+					<strong>Full-Stack AI/ML Engineer</strong>, and I document my
+					projects, lessons, ideas, thoughts, and basically, just{" "}
+					<strong>ME</strong>. Hope you find something for you!
 				</p>
 
 				{/* Post count */}

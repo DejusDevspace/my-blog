@@ -171,7 +171,7 @@ export default function PublicNavbar() {
 					</button>
 
 					<a
-						href="https://github.com/DejusDevspace"
+						href="https://github.com/DejusDevspace/my-blog"
 						target="_blank"
 						rel="noopener noreferrer"
 						className="hidden md:inline-flex rounded border border-border-default px-3 py-1.5 font-mono text-sm text-accent hover:border-accent hover:bg-accent-muted transition-colors"
