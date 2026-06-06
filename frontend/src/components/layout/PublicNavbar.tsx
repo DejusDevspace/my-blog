@@ -43,6 +43,7 @@ export default function PublicNavbar() {
 
 			if (isOutsideDesktop && isOutsideMobile) {
 				setIsSearchOpen(false);
+				setIsMobileSearchOpen(false);
 			}
 		}
 		document.addEventListener("mousedown", handleClickOutside);
