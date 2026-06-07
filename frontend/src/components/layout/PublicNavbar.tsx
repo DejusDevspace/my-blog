@@ -27,6 +27,7 @@ export default function PublicNavbar() {
 	const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
 	const desktopSearchRef = useRef<HTMLDivElement>(null);
 	const mobileSearchRef = useRef<HTMLDivElement>(null);
+	const mobilePanelRef = useRef<HTMLDivElement>(null);
 	const debouncedQuery = useDebounce(searchQuery, 400);
 
 	// Avoid hydration mismatch — theme is undefined on the server.
@@ -39,7 +40,7 @@ export default function PublicNavbar() {
 			const isOutsideDesktop =
 				!desktopSearchRef.current || !desktopSearchRef.current.contains(target);
 			const isOutsideMobile =
-				!mobileSearchRef.current || !mobileSearchRef.current.contains(target);
+				!mobilePanelRef.current || !mobilePanelRef.current.contains(target);
 
 			if (isOutsideDesktop && isOutsideMobile) {
 				setIsSearchOpen(false);
@@ -214,7 +215,7 @@ export default function PublicNavbar() {
 
 			{/* Mobile Search Panel */}
 			{isMobileSearchOpen && (
-				<div className="md:hidden border-t border-border-subtle bg-bg-surface px-4 py-3 shadow-md">
+				<div ref={mobilePanelRef} className="md:hidden border-t border-border-subtle bg-bg-surface px-4 py-3 shadow-md">
 					{renderSearchBar(mobileSearchRef, true)}
 					<div className="mt-3 flex items-center gap-3 border-t border-border-subtle pt-3">
 						<Link
