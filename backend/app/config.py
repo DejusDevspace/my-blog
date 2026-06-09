@@ -26,6 +26,18 @@ class Settings(BaseSettings):
     # --- HuggingFace (Embeddings) ---
     HUGGINGFACE_TOKEN: str = ""
 
+    # --- Groq (LLM for agent pipeline) ---
+    GROQ_API_KEY: str
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    # --- Tavily (web search for research node) ---
+    TAVILY_API_KEY: str = ""
+
+    # --- LangFuse (observability / tracing) ---
+    LANGFUSE_PUBLIC_KEY: str = ""
+    LANGFUSE_SECRET_KEY: str = ""
+    LANGFUSE_HOST: str = "https://cloud.langfuse.com"
+
     # --- Application ---
     environment: str = "development"
     cors_origins: str = "http://localhost:3000"

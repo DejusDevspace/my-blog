@@ -40,6 +40,8 @@ jobs:
           CLOUDINARY_CLOUD_NAME: ci-dummy-name
           CLOUDINARY_API_KEY: ci-dummy-key
           CLOUDINARY_API_SECRET: ci-dummy-secret
+          GROQ_API_KEY: ci-dummy-groq-key
+          TAVILY_API_KEY: ci-dummy-tavily-key
 
   # ── Frontend ─────────────────────────────────────────────────────────────
   frontend:
