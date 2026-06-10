@@ -77,7 +77,7 @@ async def run_agent_pipeline(
             post = await post_service.create_post(session, post_data, owner_id)
             await session.commit()
 
-        generate_embeddings_background(post.id)
+        await generate_embeddings_background(post.id)
 
         run_log = {
             "topic": result_state.get("topic"),
