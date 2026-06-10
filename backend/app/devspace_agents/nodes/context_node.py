@@ -5,7 +5,6 @@ import logging
 from langgraph.types import RunnableConfig
 from sqlalchemy import text as sql_text
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.devspace_agents.langfuse.client import langfuse
 from app.devspace_agents.pipeline.state import AgentState

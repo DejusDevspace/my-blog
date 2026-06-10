@@ -39,6 +39,8 @@ async def run_agent_pipeline(
     trace = langfuse.trace(
         id=str(run_id),
         name="agent_pipeline",
+        user_id=str(owner_id),
+        tags=["agent_pipeline", triggered_by],
         metadata={
             "owner_id": str(owner_id),
             "triggered_by": triggered_by,

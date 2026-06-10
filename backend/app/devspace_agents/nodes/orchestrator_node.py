@@ -146,6 +146,19 @@ async def orchestrator_node(state: AgentState, config: RunnableConfig) -> dict:
             topic = parsed["topic"]
             rationale = parsed["rationale"]
         except (json.JSONDecodeError, KeyError):
+            retry_generation = langfuse.generation(
+                trace_id=state["langfuse_trace_id"],
+                parent_observation_id=span.id,
+                name="orchestrator_topic_selection_retry",
+                model=settings.GROQ_MODEL,
+                input=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                    {"role": "assistant", "content": response_text},
+                    {"role": "user",
+                     "content": "Your previous response was not valid JSON. Reply with ONLY: {\"topic\": \"...\", \"rationale\": \"...\"}"},
+                ],
+            )
             retry_response = await groq_client.chat.completions.create(
                 model=settings.GROQ_MODEL,
                 messages=[
@@ -157,6 +170,13 @@ async def orchestrator_node(state: AgentState, config: RunnableConfig) -> dict:
                 response_format={"type": "json_object"},
             )
             retry_text = retry_response.choices[0].message.content or ""
+            retry_generation.update(
+                output=retry_text,
+                usage={
+                    "input": retry_response.usage.prompt_tokens if retry_response.usage else 0,
+                    "output": retry_response.usage.completion_tokens if retry_response.usage else 0,
+                },
+            )
             parsed = json.loads(retry_text)
             topic = parsed["topic"]
             rationale = parsed["rationale"]
