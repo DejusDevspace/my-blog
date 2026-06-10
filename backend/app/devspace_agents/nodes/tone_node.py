@@ -26,9 +26,10 @@ _TONE_FALLBACK = (
 
 async def tone_node(state: AgentState, config: RunnableConfig) -> dict:
     db: AsyncSession = config["configurable"]["db"]
-    span = langfuse.span(
-        trace_id=state["langfuse_trace_id"],
+    span = langfuse.start_observation(
+        trace_context={"id": state["langfuse_trace_id"]},
         name="tone_node",
+        as_type="span",
     )
     try:
         owner_id = state["owner_id"]
@@ -66,10 +67,9 @@ async def tone_node(state: AgentState, config: RunnableConfig) -> dict:
 
         groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 
-        generation = langfuse.generation(
-            trace_id=state["langfuse_trace_id"],
-            parent_observation_id=span.id,
+        generation = span.start_observation(
             name="tone_style_analysis",
+            as_type="generation",
             model=settings.GROQ_MODEL,
             input=[
                 {"role": "system", "content": system_prompt},
@@ -89,11 +89,12 @@ async def tone_node(state: AgentState, config: RunnableConfig) -> dict:
         response_text = response.choices[0].message.content or ""
         generation.update(
             output=response_text,
-            usage={
+            usage_details={
                 "input": response.usage.prompt_tokens if response.usage else 0,
                 "output": response.usage.completion_tokens if response.usage else 0,
             },
         )
+        generation.end()
 
         try:
             parsed = json.loads(response_text)

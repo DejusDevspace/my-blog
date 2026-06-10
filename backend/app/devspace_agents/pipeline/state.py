@@ -15,6 +15,7 @@ class AgentState(TypedDict, total=False):
     owner_id: str
     triggered_by: str
     langfuse_trace_id: str
+    langfuse_root_span_id: str
 
     topic: str
     topic_rationale: str

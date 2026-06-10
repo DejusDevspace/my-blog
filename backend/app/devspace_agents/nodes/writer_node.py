@@ -19,9 +19,10 @@ logger = logging.getLogger(__name__)
 
 async def writer_node(state: AgentState, config: RunnableConfig) -> dict:
     db: AsyncSession = config["configurable"]["db"]
-    span = langfuse.span(
-        trace_id=state["langfuse_trace_id"],
+    span = langfuse.start_observation(
+        trace_context={"id": state["langfuse_trace_id"]},
         name="writer_node",
+        as_type="span",
     )
     try:
         owner_id = state["owner_id"]
@@ -32,9 +33,7 @@ async def writer_node(state: AgentState, config: RunnableConfig) -> dict:
         categories = result.scalars().all()
         category_list = [{"id": str(c.id), "name": c.name} for c in categories]
 
-        langfuse.event(
-            trace_id=state["langfuse_trace_id"],
-            parent_observation_id=span.id,
+        span.create_event(
             name="writer_category_fetch",
             output={"categories": [c.name for c in categories]},
         )
@@ -75,10 +74,9 @@ async def writer_node(state: AgentState, config: RunnableConfig) -> dict:
 
         groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 
-        generation = langfuse.generation(
-            trace_id=state["langfuse_trace_id"],
-            parent_observation_id=span.id,
+        generation = span.start_observation(
             name="writer_draft_generation",
+            as_type="generation",
             model=settings.GROQ_MODEL,
             input=[
                 {"role": "system", "content": system_prompt},
@@ -100,11 +98,12 @@ async def writer_node(state: AgentState, config: RunnableConfig) -> dict:
         raw_text = response.choices[0].message.content or ""
         generation.update(
             output=raw_text,
-            usage={
+            usage_details={
                 "input": response.usage.prompt_tokens if response.usage else 0,
                 "output": response.usage.completion_tokens if response.usage else 0,
             },
         )
+        generation.end()
 
         try:
             parsed = json.loads(raw_text)
@@ -113,10 +112,9 @@ async def writer_node(state: AgentState, config: RunnableConfig) -> dict:
             tags = parsed.get("tags", [])
             category_id = parsed.get("category_id", "")
         except (json.JSONDecodeError, KeyError):
-            retry_generation = langfuse.generation(
-                trace_id=state["langfuse_trace_id"],
-                parent_observation_id=span.id,
+            retry_generation = span.start_observation(
                 name="writer_draft_retry",
+                as_type="generation",
                 model=settings.GROQ_MODEL,
                 input=[
                     {"role": "system", "content": system_prompt},
@@ -143,11 +141,12 @@ async def writer_node(state: AgentState, config: RunnableConfig) -> dict:
             retry_text = retry_response.choices[0].message.content or ""
             retry_generation.update(
                 output=retry_text,
-                usage={
+                usage_details={
                     "input": retry_response.usage.prompt_tokens if retry_response.usage else 0,
                     "output": retry_response.usage.completion_tokens if retry_response.usage else 0,
                 },
             )
+            retry_generation.end()
             parsed = json.loads(retry_text)
             title = parsed["title"]
             content = parsed["content"]

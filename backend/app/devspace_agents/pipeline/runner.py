@@ -36,22 +36,28 @@ async def run_agent_pipeline(
         run_id = run.id
         await session.commit()
 
-    trace = langfuse.trace(
-        id=str(run_id),
-        name="agent_pipeline",
-        user_id=str(owner_id),
-        tags=["agent_pipeline", triggered_by],
-        metadata={
-            "owner_id": str(owner_id),
-            "triggered_by": triggered_by,
-            "model": settings.GROQ_MODEL,
+    root_span = langfuse.start_observation(
+        trace_context={
+            "id": str(run_id),
+            "name": "agent_pipeline",
+            "user_id": str(owner_id),
+            "tags": ["agent_pipeline", triggered_by],
+            "metadata": {
+                "owner_id": str(owner_id),
+                "triggered_by": triggered_by,
+                "model": settings.GROQ_MODEL,
+            },
         },
+        name="agent_pipeline",
+        as_type="span",
+        input={"owner_id": str(owner_id), "triggered_by": triggered_by},
     )
 
     initial_state = {
         "owner_id": str(owner_id),
         "triggered_by": triggered_by,
         "langfuse_trace_id": str(run_id),
+        "langfuse_root_span_id": root_span.id,
     }
 
     try:
@@ -101,7 +107,7 @@ async def run_agent_pipeline(
             )
             await session.commit()
 
-        trace.update(
+        root_span.update(
             output={
                 "topic": result_state.get("topic"),
                 "post_id": str(post.id),
@@ -119,12 +125,13 @@ async def run_agent_pipeline(
             )
             await session.commit()
 
-        trace.update(
+        root_span.update(
             output={"status": "failed", "error": str(exc)},
             level="ERROR",
         )
 
     finally:
+        root_span.end()
         langfuse.flush()
 
     return run_id

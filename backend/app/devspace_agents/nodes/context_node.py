@@ -16,9 +16,10 @@ logger = logging.getLogger(__name__)
 
 async def context_node(state: AgentState, config: RunnableConfig) -> dict:
     db: AsyncSession = config["configurable"]["db"]
-    span = langfuse.span(
-        trace_id=state["langfuse_trace_id"],
+    span = langfuse.start_observation(
+        trace_context={"id": state["langfuse_trace_id"]},
         name="context_node",
+        as_type="span",
     )
     try:
         owner_id = state["owner_id"]
@@ -54,9 +55,7 @@ async def context_node(state: AgentState, config: RunnableConfig) -> dict:
             )
             results = rows.all()
 
-            langfuse.event(
-                trace_id=state["langfuse_trace_id"],
-                parent_observation_id=span.id,
+            span.create_event(
                 name="context_pgvector_query",
                 input={"topic": topic, "owner_id": owner_id},
                 output={

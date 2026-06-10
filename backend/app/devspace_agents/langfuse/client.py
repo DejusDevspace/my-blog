@@ -1,39 +1,34 @@
 """LangFuse client — singleton initialisation for pipeline observability.
 
-LangFuse is used to trace every agent pipeline run end-to-end:
-  - One trace per pipeline run (tied to AgentRun.id)
-  - One span per node (orchestrator, research, context, tone, writer)
-  - One generation per LLM call (prompt, response, token counts, model)
-  - One event for non-LLM operations (Tavily search, pgvector query)
+LangFuse v4 API: uses `start_observation(trace_context=..., as_type=...)`
+instead of the old `trace()` / `span()` / `generation()` methods.
 
-Usage pattern in nodes:
+Usage pattern:
 
     from app.devspace_agents.langfuse.client import langfuse
 
-    # Open a span at the start of a node:
-    span = langfuse.span(
-        trace_id=state['langfuse_trace_id'],
-        name="research_node",
+    # Runner creates a root span (which also creates the trace):
+    root = langfuse.start_observation(
+        trace_context={"id": run_id, "name": "pipeline", "user_id": owner_id, "tags": [...]},
+        name="agent_pipeline", as_type="span",
+        input={"owner_id": owner_id, "triggered_by": triggered_by},
     )
+    root.update(output={"status": "completed", "post_id": ..., "topic": ...})
 
     # Log an LLM generation inside the span:
-    generation = langfuse.generation(
-        trace_id=state['langfuse_trace_id'],
-        parent_observation_id=span.id,
-        name="research_summarise",
+    gen = span.start_observation(
+        name="research_summarise", as_type="generation",
         model=settings.GROQ_MODEL,
-        input=[{"role": "system", "content": system_prompt},
-               {"role": "user", "content": user_prompt}],
-        output=response_text,
-        usage={"input": prompt_tokens, "output": completion_tokens},
+        input=[...],
     )
+    gen.update(output=response_text, usage_details={"input": n, "output": n})
+    gen.end()
 
-    # Close the span when the node finishes:
+    # Log a non-LLM event:
+    span.create_event(name="tavily_search", input=..., output=...)
+
     span.end()
-
-The langfuse client is initialised once at import time from settings.
-If LANGFUSE_PUBLIC_KEY is not set, a no-op stub is used so the pipeline
-runs normally without tracing (useful in CI).
+    root.end()
 """
 
 import logging
@@ -59,35 +54,28 @@ def _build_client():
 
 
 class _NoOpSpan:
-    """No-op span returned by _NoOpLangfuse when tracing is disabled."""
+    """No-op span matching LangfuseSpan interface when tracing is disabled."""
 
     id: str = "noop"
-
-    def end(self, **kwargs) -> None:
-        pass
 
     def update(self, **kwargs) -> None:
         pass
 
+    def end(self, **kwargs) -> None:
+        pass
+
+    def start_observation(self, **kwargs) -> "_NoOpSpan":
+        return _NoOpSpan()
+
+    def create_event(self, **kwargs) -> None:
+        pass
+
 
 class _NoOpLangfuse:
-    """Drop-in stub for the LangFuse client when keys are not configured.
+    """Drop-in stub matching the Langfuse v4 SDK interface."""
 
-    All methods return no-op objects so node code runs unchanged
-    regardless of whether tracing is enabled.
-    """
-
-    def trace(self, **kwargs) -> _NoOpSpan:
+    def start_observation(self, **kwargs) -> _NoOpSpan:
         return _NoOpSpan()
-
-    def span(self, **kwargs) -> _NoOpSpan:
-        return _NoOpSpan()
-
-    def generation(self, **kwargs) -> _NoOpSpan:
-        return _NoOpSpan()
-
-    def event(self, **kwargs) -> None:
-        pass
 
     def flush(self) -> None:
         pass

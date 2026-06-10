@@ -14,9 +14,10 @@ logger = logging.getLogger(__name__)
 
 
 async def research_node(state: AgentState) -> dict:
-    span = langfuse.span(
-        trace_id=state["langfuse_trace_id"],
+    span = langfuse.start_observation(
+        trace_context={"id": state["langfuse_trace_id"]},
         name="research_node",
+        as_type="span",
     )
     try:
         if not settings.TAVILY_API_KEY:
@@ -33,9 +34,7 @@ async def research_node(state: AgentState) -> dict:
         )
         raw_results = results.get("results", [])
 
-        langfuse.event(
-            trace_id=state["langfuse_trace_id"],
-            parent_observation_id=span.id,
+        span.create_event(
             name="tavily_search",
             input={"query": state["topic"], "max_results": 5},
             output={"result_count": len(raw_results)},
@@ -64,10 +63,9 @@ async def research_node(state: AgentState) -> dict:
 
         groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 
-        generation = langfuse.generation(
-            trace_id=state["langfuse_trace_id"],
-            parent_observation_id=span.id,
+        generation = span.start_observation(
             name="research_summarise",
+            as_type="generation",
             model=settings.GROQ_MODEL,
             input=[
                 {"role": "system", "content": system_prompt},
@@ -87,11 +85,12 @@ async def research_node(state: AgentState) -> dict:
         response_text = response.choices[0].message.content or ""
         generation.update(
             output=response_text,
-            usage={
+            usage_details={
                 "input": response.usage.prompt_tokens if response.usage else 0,
                 "output": response.usage.completion_tokens if response.usage else 0,
             },
         )
+        generation.end()
 
         try:
             parsed = json.loads(response_text)
