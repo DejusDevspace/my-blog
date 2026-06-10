@@ -22,4 +22,10 @@ dependencies = [
     # Vector search
     "pgvector>=0.4.2",
     "httpx>=0.28.0",
+    # Agent pipeline
+    "langgraph>=0.2.0",
+    "langchain-groq>=0.1.0",
+    "tavily-python>=0.3.0",
+    "apscheduler>=3.10.0",
+    "langfuse>=2.0.0",
 ]

@@ -51,7 +51,7 @@ class ContextEmbedding(Base):
         nullable=False,
     )
     field_key: Mapped[str] = mapped_column(Text, nullable=False)
-    # embedding column is VECTOR(1536) — added via raw SQL in migration.
+    embedding = mapped_column(Vector(384), nullable=True)
     updated_at: Mapped[datetime] = mapped_column(
         default=datetime.now,
         onupdate=datetime.now,

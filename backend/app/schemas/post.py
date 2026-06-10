@@ -35,6 +35,7 @@ class PostCreate(BaseModel):
     series_id: uuid.UUID | None = None
     series_order: int | None = Field(None, ge=1)
     status: str = Field(default="draft", pattern=r"^(draft|published)$")
+    is_agent_authored: bool = False
 
 
 class PostUpdate(BaseModel):

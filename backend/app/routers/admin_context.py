@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, BackgroundTasks, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.deps import get_current_admin
@@ -10,6 +10,7 @@ from app.db.base import get_db
 from app.models.owner import Owner
 from app.schemas.user_context import UserContextResponse, UserContextUpdate
 from app.services import user_context_service
+from app.services.context_embedding_service import generate_context_embeddings_background
 
 router = APIRouter(
     prefix="/admin/context",
@@ -47,11 +48,22 @@ async def get_context(
 @router.put("", response_model=UserContextResponse, status_code=status.HTTP_200_OK)
 async def update_context(
     data: UserContextUpdate,
+    background_tasks: BackgroundTasks,
     db: Annotated[AsyncSession, Depends(get_db)],
     admin: Annotated[Owner, Depends(get_current_admin)],
 ):
     """Create or update the owner's context.
 
     Follows an upsert pattern: creates the row if it doesn't exist, updates if it does.
+    After saving, triggers background context embedding generation.
     """
-    return await user_context_service.upsert_user_context(db, admin.id, data)
+    context = await user_context_service.upsert_user_context(db, admin.id, data)
+    await db.flush()
+
+    background_tasks.add_task(
+        generate_context_embeddings_background,
+        context.owner_id,
+    )
+
+    await db.refresh(context)
+    return context

@@ -30,12 +30,16 @@ async def list_all_posts(
         alias="status",
         description="Filter by status: draft, published, archived, agent_draft",
     ),
+    is_agent_authored: bool | None = Query(
+        None,
+        description="Filter by agent-authored posts",
+    ),
     page: int = Query(1, ge=1),
     limit: int = Query(20, ge=1, le=100),
 ):
     """List all posts (all statuses) for admin management."""
     posts, total = await post_service.list_all_posts(
-        db, status_filter=status_filter, page=page, limit=limit
+        db, status_filter=status_filter, is_agent_authored=is_agent_authored, page=page, limit=limit
     )
     return PaginatedResponse(
         items=posts,

@@ -6,8 +6,8 @@ My personal AI-powered blog and knowledge hub. A full-stack application featurin
 
 This repository is organized as a monorepo containing two main parts:
 
-- **[`/frontend`](./frontend/)**: Next.js 16 application with Tailwind CSS v4, React Query, and BlockNote. It serves both the public-facing blog and the admin CMS dashboard.
-- **[`/backend`](./backend/)**: FastAPI application with SQLAlchemy 2.0 and PostgreSQL (Neon), providing REST APIs for content management, taxonomy, search, agent infrastructure, and Cloudinary image uploads.
+- **[`/frontend`](./frontend/)**: Next.js 17 application with Tailwind CSS v4, React Query, and BlockNote. It serves both the public-facing blog and the admin CMS dashboard, including agent settings, run log, and draft review pages.
+- **[`/backend`](./backend/)**: FastAPI application with SQLAlchemy 2.0 and PostgreSQL (Neon), providing REST APIs for content management, taxonomy, search, an autonomous AI agent pipeline (LangGraph), and Cloudinary image uploads.
 
 ## Key Features
 
@@ -15,8 +15,11 @@ This repository is organized as a monorepo containing two main parts:
 - **Rich Markdown Editing** — Block-based editor (BlockNote) with seamless Cloudinary image uploads and code block support.
 - **Taxonomy & Series Management** — Group posts by categories, tags, and series with full CRUD.
 - **Admin Authentication** — JWT-based authentication via NextAuth.js.
-- **Admin Settings** — Manage user context (bio, interests, learning focus, lifestyle) to personalize AI agent behavior.
-- **Agent Infrastructure** — Pre-built database models and scaffolding for agentic content generation (post embeddings, agent runs, scheduling, feedback loops).
+- **AI Agent Pipeline** — 5-node LangGraph pipeline that autonomously generates blog post drafts: topic selection via Groq LLM, web research (Tavily), semantic context retrieval (pgvector), writing tone analysis from published corpus, and markdown draft generation — all instrumented end-to-end with LangFuse observability.
+- **APScheduler Cron Scheduling** — Schedule automatic agent runs with configurable cron expressions (daily, weekly, bi-weekly, or custom).
+- **Agent Settings & Run Log** — Admin UI for schedule management, manual pipeline triggers, and full run history with status, duration, and LangFuse trace links.
+- **Agent Draft Review** — Review, edit, publish, or delete agent-generated drafts from a dedicated admin page.
+- **Context Embeddings** — User context (bio, interests, learning focus) is automatically embedded and stored in pgvector for semantically relevant topic selection.
 - **Cyber-Luxury Aesthetic** — Custom design tokens, dark mode default, and smooth transitions.
 
 ## Getting Started
@@ -31,7 +34,7 @@ See the [Backend README](./backend/README.md) for detailed instructions.
 cd backend
 uv sync
 cp .env.example .env
-# Configure your .env variables (Database, NextAuth, Cloudinary)
+# Configure your .env variables (Database, NextAuth, Cloudinary, Groq, Tavily, LangFuse)
 uv run alembic upgrade head
 uv run python scripts/seed_owner.py
 uv run uvicorn main:app --reload
@@ -50,3 +53,17 @@ npm run dev
 ```
 
 Both servers must be running for the application to function correctly, as the frontend proxies API requests to the backend.
+
+## Agent Pipeline Environment Variables
+
+The agent pipeline requires the following additional environment variables in `backend/.env`:
+
+| Variable              | Required | Default                      | Description                                            |
+| --------------------- | -------- | ---------------------------- | ------------------------------------------------------ |
+| `GROQ_API_KEY`        | Yes      | —                            | API key for Groq LLM (llama-3.3-70b-versatile)         |
+| `TAVILY_API_KEY`      | No       | —                            | API key for Tavily web search (skipped if empty)       |
+| `LANGFUSE_PUBLIC_KEY` | No       | —                            | LangFuse public key for observability (no-op if empty) |
+| `LANGFUSE_SECRET_KEY` | No       | —                            | LangFuse secret key                                    |
+| `LANGFUSE_HOST`       | No       | `https://cloud.langfuse.com` | LangFuse host URL                                      |
+
+The pipeline runs without Tavily or LangFuse keys — research is skipped and tracing is a no-op. Only `GROQ_API_KEY` is required.

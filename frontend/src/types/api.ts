@@ -215,3 +215,54 @@ export interface UserContextUpdate {
   learning_focus?: string | null;
   lifestyle_context?: string | null;
 }
+
+/* ============================================================================
+  Agent
+============================================================================ */
+
+/** Lightweight agent run for list/log views. */
+export interface AgentRunListItem {
+  id: string;
+  topic: string | null;
+  status: string;
+  triggered_by: string;
+  output_post_id: string | null;
+  started_at: string;
+  completed_at: string | null;
+}
+
+/** Full agent run record. */
+export interface AgentRunResponse {
+  id: string;
+  owner_id: string;
+  topic: string | null;
+  model_used: string | null;
+  status: string;
+  output_post_id: string | null;
+  run_log: Record<string, unknown> | null;
+  triggered_by: string;
+  started_at: string;
+  completed_at: string | null;
+}
+
+/** Agent schedule config. */
+export interface AgentScheduleResponse {
+  id: string;
+  owner_id: string;
+  cron_expr: string;
+  is_active: boolean;
+  updated_at: string;
+}
+
+/** Update agent schedule. */
+export interface AgentScheduleUpdate {
+  cron_expr?: string;
+  is_active?: boolean;
+}
+
+/** Response from triggering the pipeline. */
+export interface AgentTriggerResponse {
+  run_id: string;
+  status: string;
+  message: string;
+}
