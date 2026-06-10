@@ -2,7 +2,9 @@
 
 import logging
 
+from langgraph.types import RunnableConfig
 from sqlalchemy import text as sql_text
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.devspace_agents.langfuse.client import langfuse
@@ -13,7 +15,8 @@ from app.services.user_context_service import get_user_context
 logger = logging.getLogger(__name__)
 
 
-async def context_node(state: AgentState, db: AsyncSession) -> dict:
+async def context_node(state: AgentState, config: RunnableConfig) -> dict:
+    db: AsyncSession = config["configurable"]["db"]
     span = langfuse.span(
         trace_id=state["langfuse_trace_id"],
         name="context_node",

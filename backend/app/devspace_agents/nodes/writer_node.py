@@ -5,6 +5,7 @@ import logging
 import uuid
 
 from groq import AsyncGroq
+from langgraph.types import RunnableConfig
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,7 +17,8 @@ from app.models.category import Category
 logger = logging.getLogger(__name__)
 
 
-async def writer_node(state: AgentState, db: AsyncSession) -> dict:
+async def writer_node(state: AgentState, config: RunnableConfig) -> dict:
+    db: AsyncSession = config["configurable"]["db"]
     span = langfuse.span(
         trace_id=state["langfuse_trace_id"],
         name="writer_node",
@@ -60,9 +62,9 @@ async def writer_node(state: AgentState, db: AsyncSession) -> dict:
             f"learning focus: {author.get('learning_focus', '')}\n\n"
             f"Available categories:\n{category_hint}\n\n"
             "Return ONLY valid JSON with this exact structure:\n"
-            '{\n  "title": "...",\n  "content": "... full markdown, minimum 600 words ...",\n'
+            '{\n  "title": "...",\n  "content": "... full markdown, 400-600 words ...",\n'
             '  "tags": ["tag1", "tag2"],\n  "category_id": "uuid-string"\n}\n'
-            "No markdown fences, no preamble. The content field must be at least 600 words."
+            "No markdown fences, no preamble. Keep the content between 400 and 600 words."
         )
 
         user_prompt = (
@@ -91,6 +93,8 @@ async def writer_node(state: AgentState, db: AsyncSession) -> dict:
                 {"role": "user", "content": user_prompt},
             ],
             response_format={"type": "json_object"},
+            max_tokens=4096,
+            temperature=0.7,
         )
 
         raw_text = response.choices[0].message.content or ""
@@ -133,6 +137,8 @@ async def writer_node(state: AgentState, db: AsyncSession) -> dict:
                      "content": "Your response was not valid JSON. Reply with ONLY the JSON object, no markdown, no preamble."},
                 ],
                 response_format={"type": "json_object"},
+                max_tokens=4096,
+                temperature=0.7,
             )
             retry_text = retry_response.choices[0].message.content or ""
             retry_generation.update(

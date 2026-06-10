@@ -5,6 +5,7 @@ import logging
 from datetime import datetime
 
 from groq import AsyncGroq
+from langgraph.types import RunnableConfig
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -18,7 +19,8 @@ from app.services.embedding_service import get_embeddings
 logger = logging.getLogger(__name__)
 
 
-async def orchestrator_node(state: AgentState, db: AsyncSession) -> dict:
+async def orchestrator_node(state: AgentState, config: RunnableConfig) -> dict:
+    db: AsyncSession = config["configurable"]["db"]
     span = langfuse.span(
         trace_id=state["langfuse_trace_id"],
         name="orchestrator_node",
