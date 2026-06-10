@@ -159,6 +159,7 @@ export async function submitComment(
 
 export interface AdminListPostsParams {
   status?: string;
+  is_agent_authored?: boolean;
   page?: number;
   limit?: number;
 }

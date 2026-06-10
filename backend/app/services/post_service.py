@@ -139,6 +139,7 @@ async def list_all_posts(
     db: AsyncSession,
     *,
     status_filter: str | None = None,
+    is_agent_authored: bool | None = None,
     page: int = 1,
     limit: int = 20,
 ) -> tuple[list[Post], int]:
@@ -149,6 +150,10 @@ async def list_all_posts(
     if status_filter:
         query = query.where(Post.status == status_filter)
         count_query = count_query.where(Post.status == status_filter)
+
+    if is_agent_authored is not None:
+        query = query.where(Post.is_agent_authored == is_agent_authored)
+        count_query = count_query.where(Post.is_agent_authored == is_agent_authored)
 
     total = (await db.execute(count_query)).scalar() or 0
     offset = (page - 1) * limit
