@@ -8,6 +8,11 @@
 
 import apiClient from "@/lib/apiClient";
 import type {
+  AgentRunListItem,
+  AgentRunResponse,
+  AgentScheduleResponse,
+  AgentScheduleUpdate,
+  AgentTriggerResponse,
   Category,
   CategoryCreate,
   CategoryUpdate,
@@ -362,6 +367,62 @@ export async function adminUpdateContext(
   payload: UserContextUpdate,
 ): Promise<UserContext> {
   const { data } = await apiClient.put<UserContext>("/admin/context", payload);
+  return data;
+}
+
+/* ============================================================================
+  Admin — Agent
+============================================================================ */
+
+/** (Admin) Trigger a manual agent pipeline run. */
+export async function adminTriggerAgent(): Promise<AgentTriggerResponse> {
+  const { data } = await apiClient.post<AgentTriggerResponse>(
+    "/admin/agent/trigger",
+  );
+  return data;
+}
+
+export interface ListAgentRunsParams {
+  page?: number;
+  limit?: number;
+}
+
+/** (Admin) List paginated agent runs. */
+export async function adminListAgentRuns(
+  params: ListAgentRunsParams = {},
+): Promise<PaginatedResponse<AgentRunListItem>> {
+  const { data } = await apiClient.get<
+    PaginatedResponse<AgentRunListItem>
+  >("/admin/agent/runs", { params });
+  return data;
+}
+
+/** (Admin) Fetch a single agent run by ID. */
+export async function adminGetAgentRun(
+  runId: string,
+): Promise<AgentRunResponse> {
+  const { data } = await apiClient.get<AgentRunResponse>(
+    `/admin/agent/runs/${runId}`,
+  );
+  return data;
+}
+
+/** (Admin) Fetch the agent schedule config. */
+export async function adminGetAgentSchedule(): Promise<AgentScheduleResponse> {
+  const { data } = await apiClient.get<AgentScheduleResponse>(
+    "/admin/agent/schedule",
+  );
+  return data;
+}
+
+/** (Admin) Update the agent schedule config. */
+export async function adminUpdateAgentSchedule(
+  payload: AgentScheduleUpdate,
+): Promise<AgentScheduleResponse> {
+  const { data } = await apiClient.put<AgentScheduleResponse>(
+    "/admin/agent/schedule",
+    payload,
+  );
   return data;
 }
 

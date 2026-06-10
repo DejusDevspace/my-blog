@@ -15,6 +15,11 @@ import {
   type UseMutationOptions,
 } from "@tanstack/react-query";
 import type {
+  AgentRunListItem,
+  AgentRunResponse,
+  AgentScheduleResponse,
+  AgentScheduleUpdate,
+  AgentTriggerResponse,
   ApiError,
   Category,
   CategoryCreate,
@@ -38,7 +43,11 @@ import type {
   UserContextUpdate,
 } from "@/types";
 import * as api from "@/services/api";
-import type { ListPostsParams, AdminListPostsParams } from "@/services/api";
+import type {
+  ListPostsParams,
+  AdminListPostsParams,
+  ListAgentRunsParams,
+} from "@/services/api";
 
 /* ============================================================================
   Stale-time tiers — tuned by data volatility
@@ -86,6 +95,16 @@ export const queryKeys = {
     },
     context: {
       all: ["admin", "context"] as const,
+    },
+    agent: {
+      schedule: ["admin", "agent", "schedule"] as const,
+      runs: {
+        all: ["admin", "agent", "runs"] as const,
+        list: (params?: ListAgentRunsParams) =>
+          ["admin", "agent", "runs", "list", params] as const,
+        detail: (runId: string) =>
+          ["admin", "agent", "runs", "detail", runId] as const,
+      },
     },
   },
   tags: {
@@ -514,6 +533,89 @@ export function useAdminUpdateContext(
     mutationFn: api.adminUpdateContext,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.context.all });
+    },
+    ...options,
+  });
+}
+
+/* ============================================================================
+  Admin — Agent
+============================================================================ */
+
+/** (Admin) Fetch the agent schedule config. */
+export function useAdminAgentSchedule(
+  options?: Partial<UseQueryOptions<AgentScheduleResponse, ApiError>>,
+) {
+  return useQuery<AgentScheduleResponse, ApiError>({
+    queryKey: queryKeys.admin.agent.schedule,
+    queryFn: api.adminGetAgentSchedule,
+    staleTime: STALE.taxonomy,
+    ...options,
+  });
+}
+
+/** (Admin) Update the agent schedule config. */
+export function useAdminUpdateAgentSchedule(
+  options?: UseMutationOptions<
+    AgentScheduleResponse,
+    ApiError,
+    AgentScheduleUpdate
+  >,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<
+    AgentScheduleResponse,
+    ApiError,
+    AgentScheduleUpdate
+  >({
+    mutationFn: api.adminUpdateAgentSchedule,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.admin.agent.schedule,
+      });
+    },
+    ...options,
+  });
+}
+
+/** (Admin) Fetch paginated agent runs. */
+export function useAdminAgentRuns(
+  params: ListAgentRunsParams = {},
+  options?: Partial<
+    UseQueryOptions<PaginatedResponse<AgentRunListItem>, ApiError>
+  >,
+) {
+  return useQuery<PaginatedResponse<AgentRunListItem>, ApiError>({
+    queryKey: queryKeys.admin.agent.runs.list(params),
+    queryFn: () => api.adminListAgentRuns(params),
+    ...options,
+  });
+}
+
+/** (Admin) Fetch a single agent run by ID. */
+export function useAdminAgentRun(
+  runId: string,
+  options?: Partial<UseQueryOptions<AgentRunResponse, ApiError>>,
+) {
+  return useQuery<AgentRunResponse, ApiError>({
+    queryKey: queryKeys.admin.agent.runs.detail(runId),
+    queryFn: () => api.adminGetAgentRun(runId),
+    enabled: !!runId,
+    ...options,
+  });
+}
+
+/** (Admin) Trigger a manual agent pipeline run. */
+export function useAdminTriggerAgent(
+  options?: UseMutationOptions<AgentTriggerResponse, ApiError, void>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation<AgentTriggerResponse, ApiError, void>({
+    mutationFn: api.adminTriggerAgent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.admin.agent.runs.all,
+      });
     },
     ...options,
   });
