@@ -17,8 +17,9 @@ async def get_admin_stats(
     owner_id: str,
 ) -> AdminStatsResponse:
     """Compute 11 aggregate counts for the admin dashboard, all scoped to ``owner_id``."""
+    # Naive UTC cutoff to match AgentRun.started_at's non-timezone-aware column
     today_start = datetime.now(timezone.utc).replace(
-        hour=0, minute=0, second=0, microsecond=0
+        hour=0, minute=0, second=0, microsecond=0, tzinfo=None
     )
 
     # --- Posts ---
