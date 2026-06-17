@@ -10,16 +10,26 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth.deps import get_current_admin
 from app.db.base import get_db
 from app.models.owner import Owner
-from app.schemas.common import MessageResponse, PaginatedResponse
+from app.schemas.common import AdminStatsResponse, MessageResponse, PaginatedResponse
 from app.schemas.post import PostCreate, PostListItem, PostResponse, PostUpdate
 from app.services import post_service
 from app.services.embedding_service import generate_embeddings_background
+from app.services.stats_service import get_admin_stats
 
 router = APIRouter(
     prefix="/admin/posts",
     tags=["Posts (Admin)"],
     dependencies=[Depends(get_current_admin)],
 )
+
+
+@router.get("/stats", response_model=AdminStatsResponse)
+async def admin_stats(
+    db: Annotated[AsyncSession, Depends(get_db)],
+    admin: Annotated[Owner, Depends(get_current_admin)],
+):
+    """Return aggregated dashboard statistics, scoped to the authenticated admin."""
+    return await get_admin_stats(db, admin.id)
 
 
 @router.get("", response_model=PaginatedResponse[PostListItem])
