@@ -79,6 +79,7 @@ export const queryKeys = {
     detail: (slug: string) => ["series", "detail", slug] as const,
   },
   admin: {
+    all: ["admin"] as const,
     posts: {
       all: ["admin", "posts"] as const,
       list: (params?: AdminListPostsParams) =>
@@ -253,6 +254,7 @@ export function useAdminCreatePost(
         queryKey: queryKeys.admin.posts.all,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -279,6 +281,7 @@ export function useAdminUpdatePost(
         queryKey: queryKeys.admin.posts.all,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -296,6 +299,7 @@ export function useAdminDeletePost(
         queryKey: queryKeys.admin.posts.all,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.posts.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -326,6 +330,7 @@ export function useAdminCreateCategory(
     mutationFn: api.adminCreateCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -349,6 +354,7 @@ export function useAdminUpdateCategory(
       api.adminUpdateCategory(categoryId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -363,6 +369,7 @@ export function useAdminDeleteCategory(
     mutationFn: api.adminDeleteCategory,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.categories.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -396,6 +403,7 @@ export function useAdminCreateSeries(
         queryKey: queryKeys.admin.series.all,
       });
       queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -420,6 +428,7 @@ export function useAdminUpdateSeries(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.series.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -435,6 +444,7 @@ export function useAdminDeleteSeries(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.series.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.series.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -466,6 +476,7 @@ export function useAdminCreateTag(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -490,6 +501,7 @@ export function useAdminUpdateTag(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -505,6 +517,7 @@ export function useAdminDeleteTag(
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.tags.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.tags.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -535,6 +548,7 @@ export function useAdminUpdateContext(
     mutationFn: api.adminUpdateContext,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.context.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -575,6 +589,7 @@ export function useAdminUpdateAgentSchedule(
       queryClient.invalidateQueries({
         queryKey: queryKeys.admin.agent.schedule,
       });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
@@ -618,6 +633,7 @@ export function useAdminTriggerAgent(
       queryClient.invalidateQueries({
         queryKey: queryKeys.admin.agent.runs.all,
       });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
     ...options,
   });
