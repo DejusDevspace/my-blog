@@ -8,6 +8,7 @@
 
 import apiClient from "@/lib/apiClient";
 import type {
+  AdminStatsResponse,
   AgentRunListItem,
   AgentRunResponse,
   AgentScheduleResponse,
@@ -450,6 +451,22 @@ export async function adminDeleteImage(
   const { data } = await apiClient.delete<MessageResponse>(
     "/admin/uploads/image",
     { data: { url } },
+  );
+  return data;
+}
+
+/* ============================================================================
+  Health
+============================================================================ */
+
+/* ============================================================================
+  Admin — Stats
+============================================================================ */
+
+/** (Admin) Fetch aggregated dashboard statistics. */
+export async function adminGetStats(): Promise<AdminStatsResponse> {
+  const { data } = await apiClient.get<AdminStatsResponse>(
+    "/admin/posts/stats",
   );
   return data;
 }

@@ -266,3 +266,22 @@ export interface AgentTriggerResponse {
   status: string;
   message: string;
 }
+
+/* ============================================================================
+  Admin — Stats
+============================================================================ */
+
+/** Aggregated dashboard statistics. */
+export interface AdminStatsResponse {
+  total_posts: number;
+  published_posts: number;
+  draft_posts: number;
+  agent_pending_posts: number;
+  total_comments: number;
+  pending_comments: number;
+  total_categories: number;
+  total_tags: number;
+  agent_runs_total: number;
+  agent_runs_failed: number;
+  agent_runs_today: number;
+}

@@ -6,6 +6,7 @@ import {
 	useAdminPosts,
 	useAdminCategories,
 	useAdminDeletePost,
+	useAdminStats,
 } from "@/hooks/useApi";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 import {
@@ -47,15 +48,7 @@ export default function AdminDashboardPage() {
 
 	const { data: categories } = useAdminCategories();
 
-	// Calculate stats from the current page data, as there is no aggregation endpoint yet.
-	// TODO: Create a dedicated `/admin/posts/stats` endpoint for accurate global metrics.
-	const totalPosts = postsData?.total || 0;
-	const publishedCount =
-		postsData?.items.filter((p) => p.status === "published").length || 0;
-	const draftCount =
-		postsData?.items.filter((p) => p.status === "draft").length || 0;
-	const agentPendingCount =
-		postsData?.items.filter((p) => p.status === "agent_draft").length || 0;
+	const { data: stats } = useAdminStats();
 
 	// Client-side filtering for search and category, as they aren't explicitly supported by the admin list endpoint yet.
 	// TODO: Update backend `adminListPosts` to accept `search` and `category` query params for server-side filtering.
@@ -96,7 +89,7 @@ export default function AdminDashboardPage() {
 							Total Posts
 						</h3>
 						<div className="font-display text-h2 font-bold text-text-primary">
-							{totalPosts}
+							{stats?.total_posts ?? "—"}
 						</div>
 					</div>
 				</div>
@@ -111,7 +104,7 @@ export default function AdminDashboardPage() {
 							Published
 						</h3>
 						<div className="font-display text-h2 font-bold text-text-primary">
-							{publishedCount}
+							{stats?.published_posts ?? "—"}
 						</div>
 					</div>
 				</div>
@@ -126,7 +119,7 @@ export default function AdminDashboardPage() {
 							Drafts
 						</h3>
 						<div className="font-display text-h2 font-bold text-text-primary">
-							{draftCount}
+							{stats?.draft_posts ?? "—"}
 						</div>
 					</div>
 				</div>
@@ -141,7 +134,7 @@ export default function AdminDashboardPage() {
 							Agent Pending
 						</h3>
 						<div className="font-display text-(length:(--text-h2) font-bold text-accent text-shadow-(--shadow-neon-accent)">
-							0{agentPendingCount}
+							{stats?.agent_pending_posts ?? "—"}
 						</div>
 					</div>
 				</div>
@@ -321,7 +314,8 @@ export default function AdminDashboardPage() {
 					<div className="flex items-center justify-between border-t border-border-subtle p-4 font-mono text-xs text-text-tertiary">
 						<span>
 							Showing {filteredItems.length > 0 ? (page - 1) * 10 + 1 : 0}-
-							{Math.min(page * 10, totalPosts)} of {totalPosts} posts
+							{Math.min(page * 10, (postsData?.total ?? 0))} of{" "}
+							{postsData?.total ?? 0} posts
 						</span>
 						<div className="flex items-center gap-1">
 							<button
