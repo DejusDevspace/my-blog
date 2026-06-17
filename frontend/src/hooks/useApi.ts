@@ -15,6 +15,7 @@ import {
   type UseMutationOptions,
 } from "@tanstack/react-query";
 import type {
+  AdminStatsResponse,
   AgentRunListItem,
   AgentRunResponse,
   AgentScheduleResponse,
@@ -110,6 +111,7 @@ export const queryKeys = {
   tags: {
     all: ["tags"] as const,
   },
+  stats: ["admin", "stats"] as const,
   health: ["health"] as const,
 } as const;
 
@@ -632,6 +634,22 @@ export function useTags(
   return useQuery<Tag[], ApiError>({
     queryKey: queryKeys.tags.all,
     queryFn: api.getTags,
+    ...options,
+  });
+}
+
+/* ============================================================================
+  Admin — Stats
+============================================================================ */
+
+/** (Admin) Fetch aggregated dashboard statistics. */
+export function useAdminStats(
+  options?: Partial<UseQueryOptions<AdminStatsResponse, ApiError>>,
+) {
+  return useQuery<AdminStatsResponse, ApiError>({
+    queryKey: queryKeys.stats,
+    queryFn: api.adminGetStats,
+    staleTime: STALE.taxonomy,
     ...options,
   });
 }
