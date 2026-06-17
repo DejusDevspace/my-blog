@@ -17,53 +17,7 @@ import {
 	TerminalSquare,
 	Tag,
 } from "lucide-react";
-
-interface NavItem {
-	href: string;
-	label: string;
-	icon: React.ElementType;
-	badge?: number;
-}
-
-const NAV_GROUPS = [
-	{
-		label: "CONTENT",
-		items: [
-			{ href: "/admin", label: "Posts", icon: Layers },
-			{ href: "/admin/posts/new", label: "New Post", icon: Plus },
-			{
-				href: "/admin/agent-drafts",
-				label: "Agent Drafts",
-				icon: Sparkles,
-				badge: 2,
-			},
-		],
-	},
-	{
-		label: "ORGANIZATION",
-		items: [
-			{ href: "/admin/taxonomy", label: "Taxonomy", icon: Tag },
-			{ href: "/admin/series", label: "Series", icon: Layers },
-		],
-	},
-	{
-		label: "SETTINGS",
-		items: [
-			{ href: "/admin/settings/context", label: "My Context", icon: Network },
-			{
-				href: "/admin/settings/agent",
-				label: "Agent Settings",
-				icon: SlidersHorizontal,
-			},
-		],
-	},
-	{
-		label: "ACTIVITY",
-		items: [
-			{ href: "/admin/agent/runs", label: "Run Log", icon: TerminalSquare },
-		],
-	},
-];
+import { useAdminStats } from "@/hooks/useApi";
 
 export default function AdminShell({
 	children,
@@ -73,6 +27,47 @@ export default function AdminShell({
 	const pathname = usePathname();
 	const router = useRouter();
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+	const { data: stats } = useAdminStats();
+
+	const navGroups = [
+		{
+			label: "CONTENT",
+			items: [
+				{ href: "/admin", label: "Posts", icon: Layers },
+				{ href: "/admin/posts/new", label: "New Post", icon: Plus },
+				{
+					href: "/admin/agent-drafts",
+					label: "Agent Drafts",
+					icon: Sparkles,
+					badge: stats?.agent_pending_posts,
+				},
+			],
+		},
+		{
+			label: "ORGANIZATION",
+			items: [
+				{ href: "/admin/taxonomy", label: "Taxonomy", icon: Tag },
+				{ href: "/admin/series", label: "Series", icon: Layers },
+			],
+		},
+		{
+			label: "SETTINGS",
+			items: [
+				{ href: "/admin/settings/context", label: "My Context", icon: Network },
+				{
+					href: "/admin/settings/agent",
+					label: "Agent Settings",
+					icon: SlidersHorizontal,
+				},
+			],
+		},
+		{
+			label: "ACTIVITY",
+			items: [
+				{ href: "/admin/agent/runs", label: "Run Log", icon: TerminalSquare },
+			],
+		},
+	];
 
 	const handleLogout = () => {
 		signOut({ callbackUrl: "/admin/login" });
@@ -106,7 +101,7 @@ export default function AdminShell({
 				</div>
 
 				<nav className="flex flex-1 flex-col gap-8 overflow-y-auto px-4 py-6">
-					{NAV_GROUPS.map((group) => (
+					{navGroups.map((group) => (
 						<div key={group.label} className="flex flex-col gap-3">
 							<h3 className="m-0 pl-2 font-mono text-[0.65rem] font-semibold tracking-widest text-text-tertiary">
 								{group.label}
