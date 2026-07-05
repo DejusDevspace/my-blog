@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeHighlight from "rehype-highlight";
@@ -70,6 +71,21 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
 				rehypePlugins={[rehypeSlug, rehypeHighlight]}
 				components={{
 					pre: Pre,
+					ul: ({ children, ...props }: ComponentPropsWithoutRef<"ul">) => (
+						<ul className="list-outside list-disc pl-6" {...props}>
+							{children}
+						</ul>
+					),
+					ol: ({ children, ...props }: ComponentPropsWithoutRef<"ol">) => (
+						<ol className="list-outside list-decimal pl-6" {...props}>
+							{children}
+						</ol>
+					),
+					li: ({ children, ...props }: ComponentPropsWithoutRef<"li">) => (
+						<li className="pl-1 marker:text-accent" {...props}>
+							{children}
+						</li>
+					),
 				}}
 			>
 				{content}
