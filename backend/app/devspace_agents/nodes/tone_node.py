@@ -50,20 +50,67 @@ async def tone_node(state: AgentState, config: RunnableConfig) -> dict:
             logger.warning("Fewer than 3 published posts — using fallback tone profile.")
             span.update(status_message="fallback_used_corpus_too_small")
             span.end()
-            return {"tone_profile": _TONE_FALLBACK}
+            return {
+                "tone_profile": _TONE_FALLBACK,
+                "tone_opening_pattern": "Start with a problem statement or a real situation that makes the reader feel the pain before explaining the solution.",
+                "tone_humour_style": "Dry, analogy-based. Use sparingly.",
+                "tone_technical_depth": "Assume developer-level baseline. Explain why, not just what. Show code where it clarifies.",
+                "tone_structure_notes": "Use H2 headers. Prefer prose over lists. Keep paragraphs to 3-5 sentences.",
+                "tone_avoid": [
+                    "In this post, I will...",
+                    "In conclusion",
+                    "It's worth noting that",
+                    "In the rapidly evolving landscape of",
+                ],
+            }
 
         corpus_text = "\n---\n".join(
             f"Title: {p.title}\nExcerpt: {p.excerpt or ''}\nContent start: {p.content[:500]}"
             for p in posts
         )
 
-        system_prompt = (
-            "You are a writing style analyst. Given a sample of an author's published blog posts, "
-            "describe their writing style in 2-3 sentences. Focus on: sentence structure, vocabulary "
-            "level, use of examples vs theory, humour or formality, and paragraph length. "
-            "Return ONLY valid JSON: {\"tone_profile\": \"...\"} No markdown, no preamble."
-        )
-        user_prompt = f"Here are the author's recent posts:\n\n{corpus_text}"
+        system_prompt = """You are a writing style analyst. Your job is to produce a precise, \
+        actionable style guide based on an author's published blog posts — one that another \
+        writer (or an LLM) could follow to produce output that genuinely sounds like that person.
+
+        DO NOT produce vague descriptors like "conversational" or "engaging". These are useless \
+        to a writer. Be specific about:
+
+        1. VOICE: Does the author write in first person? Do they address the reader directly? \
+           Do they use "we" or "you"? Are they opinionated or neutral?
+        2. OPENING PATTERN: How do posts start? Problem statement? Anecdote? Provocative claim? \
+           Direct dive into content?
+        3. HUMOUR & PERSONALITY: Where and how does humour appear? Is it dry? Self-deprecating? \
+           Analogy-based? What kinds of references do they reach for?
+        4. TECHNICAL DEPTH: Do they explain concepts from scratch or assume baseline knowledge? \
+           Do they show code? At what level of detail?
+        5. STRUCTURE: Do they use headers? How often? Do they prefer lists or prose? \
+           How do paragraphs end — with a conclusion, a question, or a pivot to the next idea?
+        6. WHAT TO AVOID: What patterns are absent from this author's writing that a generic \
+           AI would reach for? (e.g. "never ends with 'In conclusion'", \
+           "never uses bullet points to summarise what the prose already said", \
+           "never uses corporate hedging language like 'it's worth noting that'")
+
+        Return ONLY valid JSON, no markdown fences, no preamble.
+        Schema:
+        {
+          "tone_profile": "...",
+          "opening_pattern": "...",
+          "humour_style": "...",
+          "technical_depth": "...",
+          "structure_notes": "...",
+          "avoid": ["...", "..."]
+        }
+
+        Each field: 1-3 sentences. Specific. Actionable."""
+
+        user_prompt = f"""Here are the author's recent published posts. Analyse the writing style \
+        and produce a style guide.
+
+        {corpus_text}
+
+        Focus on patterns that appear consistently across multiple posts — these are the real \
+        style signals. Ignore one-off choices."""
 
         groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 
@@ -98,13 +145,31 @@ async def tone_node(state: AgentState, config: RunnableConfig) -> dict:
 
         try:
             parsed = json.loads(response_text)
-            tone_profile = parsed["tone_profile"]
+            tone_profile = parsed.get("tone_profile", _TONE_FALLBACK)
+            opening_pattern = parsed.get("opening_pattern", "")
+            humour_style = parsed.get("humour_style", "")
+            tech_depth = parsed.get("technical_depth", "")
+            structure_notes = parsed.get("structure_notes", "")
+            avoid_list = parsed.get("avoid", [])
         except (json.JSONDecodeError, KeyError):
-            tone_profile = response_text
+            tone_profile = _TONE_FALLBACK
+            opening_pattern = ""
+            humour_style = ""
+            tech_depth = ""
+            structure_notes = ""
+            avoid_list = []
 
         span.update(status_message=f"analysed_{len(posts)}_posts")
         span.end()
-        return {"tone_profile": tone_profile}
+
+        return {
+            "tone_profile": tone_profile,
+            "tone_opening_pattern": opening_pattern,
+            "tone_humour_style": humour_style,
+            "tone_technical_depth": tech_depth,
+            "tone_structure_notes": structure_notes,
+            "tone_avoid": avoid_list,
+        }
 
     except Exception as exc:
         span.update(level="ERROR", status_message=str(exc))

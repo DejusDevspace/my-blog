@@ -53,24 +53,183 @@ async def writer_node(state: AgentState, config: RunnableConfig) -> dict:
             f'  - {p.get("title", "")}' for p in past_posts
         )
 
-        system_prompt = (
-            "You are a technical blog post writer. Write a complete markdown blog post "
-            f"in the following style:\n\n{tone}\n\n"
-            f"Author context — bio: {author.get('bio', '')}, "
-            f"interests: {', '.join(author.get('interests', []))}, "
-            f"learning focus: {author.get('learning_focus', '')}\n\n"
-            f"Available categories:\n{category_hint}\n\n"
-            "Return ONLY valid JSON with this exact structure:\n"
-            '{\n  "title": "...",\n  "content": "... full markdown, 400-600 words ...",\n'
-            '  "tags": ["tag1", "tag2"],\n  "category_id": "uuid-string"\n}\n'
-            "No markdown fences, no preamble. Keep the content between 400 and 600 words."
-        )
+        # Assemble writer context
+        tone = state.get("tone_profile", _TONE_FALLBACK)
+        opening_pattern = state.get("tone_opening_pattern", "")
+        humour_style = state.get("tone_humour_style", "")
+        tech_depth = state.get("tone_technical_depth", "")
+        structure_notes = state.get("tone_structure_notes", "")
+        avoid_list = state.get("tone_avoid", [])
+        author = state.get("author_context", {})
+        research = state.get("research_summary", "")
+        key_concepts = state.get("research_key_concepts", [])
+        angles = state.get("research_angles", [])
+        notable_sources = state.get("research_notable_sources", [])
+        past_posts = state.get("relevant_past_posts", [])
+        topic = state.get("topic", "")
+        relevant_fields = author.get("relevant_fields", [])
 
-        user_prompt = (
-            f"Write a blog post about: {state.get('topic', '')}\n\n"
-            f"Research brief:\n{research}\n\n"
-            f"Previous posts by this author (for continuity):\n{past_titles}"
-        )
+        # Build context strings
+        past_titles_text = "\n".join(f"  - {p.get('title', '')}" for p in past_posts) or "  (none yet)"
+        avoid_text = "\n".join(f"  - {a}" for a in avoid_list) or "  (none specified)"
+        concepts_text = ", ".join(key_concepts) or "(none provided)"
+        angles_text = "\n".join(f"  - {a}" for a in angles) or "  (none provided)"
+        sources_text = "\n".join(
+            f"  - {s.get('title', '')} ({s.get('url', '')}): {s.get('why_relevant', '')}"
+            for s in notable_sources
+        ) or "  (none provided)"
+
+        # Emphasise the context fields most relevant to this topic
+        relevant_context_block = ""
+        if "bio" in relevant_fields:
+            relevant_context_block += f"Author background (emphasise this): {author.get('bio', '')}\n"
+        if "learning_focus" in relevant_fields:
+            relevant_context_block += f"Current learning (weave this in): {author.get('learning_focus', '')}\n"
+        if "lifestyle_context" in relevant_fields:
+            relevant_context_block += f"Personality/cultural context (use for voice and analogies): {author.get('lifestyle_context', '')}\n"
+        if not relevant_context_block:
+            relevant_context_block = (
+                f"Bio: {author.get('bio', '')}\n"
+                f"Learning focus: {author.get('learning_focus', '')}\n"
+                f"Personality: {author.get('lifestyle_context', '')}\n"
+            )
+
+        system_prompt = f"""You are ghostwriting a technical blog post for a Nigerian AI/ML and software \
+        engineer. You are not writing a generic tutorial. You are writing in the author's voice, from \
+        their perspective, drawing on their specific background and what they are actively learning.
+
+        ═══════════════════════════════════════════
+        VOICE & STYLE (inferred from published posts)
+        ═══════════════════════════════════════════
+        {tone}
+
+        Opening pattern: {opening_pattern or 'Start with a problem statement or a real situation that makes the reader feel the pain before you explain the solution.'}
+
+        Humour style: {humour_style or 'Dry, analogy-based. Use it sparingly — one good joke lands better than five mediocre ones. Reach for football, gaming, or cultural references when they genuinely fit.'}
+
+        Technical depth: {tech_depth or 'Assume the reader is a developer but not necessarily an expert in this specific area. Explain the why, not just the what. Show code where it makes things clearer, not just to have code.'}
+
+        Structure: {structure_notes or 'Use headers to break up sections. Prefer prose over bullet lists. Keep paragraphs to 3-5 sentences. End sections with a forward push to the next idea, not a summary of what you just said.'}
+
+        ═══════════════════════════════════════════
+        THINGS TO NEVER DO IN THIS POST
+        ═══════════════════════════════════════════
+        {avoid_text}
+        - Never open with "In this post, I will..."
+        - Never use "In conclusion" or "To summarise" as a section header or opener
+        - Never end with a generic call to action like "Let me know your thoughts in the comments"
+        - Never use consecutive bullet lists as a substitute for explanation
+        - Never hedge with "it's worth noting that" or "it's important to mention"
+        - Never write a post that could have been written by someone with no hands-on experience
+        - Never sound like ChatGPT wrote it — no "In the rapidly evolving landscape of..."
+
+        ═══════════════════════════════════════════
+        AUTHOR CONTEXT
+        ═══════════════════════════════════════════
+        {relevant_context_block}
+        Full interests: {', '.join(author.get('interests', []))}
+
+        Use this context to:
+        - Ground examples in the author's actual stack (Python, FastAPI, LangGraph, pgvector, etc.)
+        - Reference the author's background where it adds authenticity (mechatronics → systems thinking)
+        - Use analogies from the author's world (Liverpool FC, EA FC, psychology, kinesics) when they \
+          genuinely clarify a technical point — never force them
+
+        ═══════════════════════════════════════════
+        AVAILABLE CATEGORIES (select exactly one)
+        ═══════════════════════════════════════════
+        {category_hint}
+        
+        ═══════════════════════════════════════════
+        MANDATORY POST STRUCTURE
+        ═══════════════════════════════════════════
+        The post MUST follow this structure. Deviation is not permitted.
+        
+        OPENING (no header — just prose):
+          Do not open with a definition, a broad statement about the technology, or
+          "In this post I will...". Open by dropping the reader into a specific
+          situation, problem, or observation. The first sentence should make the
+          reader feel something — curiosity, recognition, or mild discomfort.
+          The opening section should be 2-4 paragraphs of prose with no header.
+        
+        BODY (2-4 major sections with ## headers):
+          Each section must advance an argument or build toward a conclusion.
+          Sections that merely explain a concept without connecting it to the
+          post's central point are filler — remove them.
+          Use ### only for distinct sub-points within a section, not for decoration.
+          Code blocks: use when they make an abstract point concrete. A code block
+          that could be found verbatim in any tutorial adds nothing — write
+          illustrative examples that are specific to the post's argument.
+        
+        CLOSING (no header called "Conclusion" or "Summary"):
+          End with a section that has a substantive title (e.g. "## What This
+          Actually Changes" or "## Where I'm Taking This Next").
+          The closing must contain a genuine takeaway — something the reader can
+          do, think about, or look at differently. It must not summarise what
+          the post already said. It must not end with "let me know your thoughts"
+          or any variant.
+        
+        FORBIDDEN SECTION HEADERS:
+          "Introduction", "Conclusion", "Summary", "Further Reading",
+          "Key Takeaways", "In Summary", "Wrapping Up", "Final Thoughts".
+          
+        ═══════════════════════════════════════════
+        SELF-CHECK BEFORE GENERATING OUTPUT
+        ═══════════════════════════════════════════
+        Before writing the post, answer these internally:
+        - Does the opening start with a definition or broad statement? If yes, rewrite it.
+        - Does any section header say "Introduction", "Conclusion", or "Summary"? If yes, rename it.
+        - Does the post end with a call to action or a summary? If yes, replace it.
+        - Is the topic the same as or semantically adjacent to any post in the recent posts list?
+          If yes, stop and pick a different angle.
+        - Would this post be indistinguishable from a post written by someone with no hands-on
+          experience with the author's specific stack? If yes, add a concrete example from
+          the author's actual work.
+
+        ═══════════════════════════════════════════
+        OUTPUT FORMAT
+        ═══════════════════════════════════════════
+        Return ONLY valid JSON. No markdown fences. No preamble. No explanation outside the JSON.
+
+        {{
+          "title": "...",
+          "content": "... full markdown post ...",
+          "tags": ["tag1", "tag2", "tag3"],
+          "category_id": "uuid-string"
+        }}
+
+        - title: specific and honest. Not clickbait. Not a question unless it's a genuinely good one.
+        - content: full markdown. All headers, code blocks, and prose included.
+        - tags: 3-6 tags from this list only: {[c['name'] for c in category_list]} — \
+          wait, tags not categories. Use relevant technical terms as tags.
+        - category_id: must be one of the provided category UUIDs exactly."""
+
+        user_prompt = f"""Write a blog post on this topic: {topic}
+
+        ═══════════════════════════════════════════
+        RESEARCH BRIEF
+        ═══════════════════════════════════════════
+        {research}
+
+        Key concepts the post must handle correctly:
+        {concepts_text}
+
+        Angles worth exploring (pick 1-2, don't try to cover all):
+        {angles_text}
+
+        Sources worth citing or linking:
+        {sources_text}
+
+        ═══════════════════════════════════════════
+        PAST POSTS (for continuity and cross-references)
+        ═══════════════════════════════════════════
+        {past_titles_text}
+
+        If any past post title is directly related to this topic, consider a brief natural \
+        cross-reference in the content — not a forced plug, just an honest "I wrote about X \
+        before" where it adds value.
+
+        Now write the post. Sound like the author. Make it worth reading."""
 
         groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 
