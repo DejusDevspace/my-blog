@@ -19,14 +19,23 @@ class AgentState(TypedDict, total=False):
 
     topic: str
     topic_rationale: str
+    last_generated_topic: str | None
 
     research_results: list[dict]
     research_summary: str
+    research_key_concepts: list[str]
+    research_angles: list[str]
+    research_notable_sources: list[dict]
 
     author_context: dict
     relevant_past_posts: list[dict]
 
     tone_profile: str
+    tone_opening_pattern: str
+    tone_humour_style: str
+    tone_technical_depth: str
+    tone_structure_notes: str
+    tone_avoid: list[str]
 
     draft_title: str
     draft_content: str

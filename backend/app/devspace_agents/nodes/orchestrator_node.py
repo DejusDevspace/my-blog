@@ -94,22 +94,105 @@ async def orchestrator_node(state: AgentState, config: RunnableConfig) -> dict:
             logger.exception("Semantic search failed in orchestrator — continuing without past posts")
             relevant_past_posts = []
 
-        system_prompt = (
-            "You are a topic selection assistant for a developer blog. "
-            "Return ONLY valid JSON: {\"topic\": \"...\", \"rationale\": \"...\"} "
-            "No markdown, no preamble."
-        )
-        user_prompt = (
-            f"Author bio: {author_context['bio']}\n"
-            f"Author interests: {author_context['interests']}\n"
-            f"Learning focus: {author_context['learning_focus']}\n"
-            f"Lifestyle context: {author_context['lifestyle_context']}\n\n"
-            f"Recent posts (avoid these topics):\n"
-            f"{chr(10).join('- ' + t for t in recent_post_titles)}\n\n"
-            "Select a specific, focused blog topic for a developer audience. "
-            "Connect to the author's current interests or learning focus. "
-            "Be concrete — not 'AI' but 'using embeddings for semantic deduplication in a personal knowledge base.'"
-        )
+        # ── DOMAIN ROTATION LOGIC ──────────────────────────────────────────────────
+        # Count how many of the last 5 posts fall into each broad domain.
+        # The orchestrator prompt uses this to nudge away from clusters.
+        domain_map = {
+            "ai_ml": ["AI", "ML", "LLM", "RAG", "agent", "embedding", "model",
+                      "LangChain", "LangGraph", "Hugging Face", "fine-tun"],
+            "backend": ["backend", "API", "database", "postgres", "FastAPI",
+                        "system design", "architecture", "queue", "cache"],
+            "systems": ["Rust", "Go", "low-level", "memory", "concurrency",
+                        "embedded", "robotics", "performance"],
+            "career": ["career", "learning", "open source", "junior", "engineer",
+                       "productivity", "growth", "reflection"],
+            "projects": ["built", "project", "ship", "launched", "weekend",
+                         "side project", "d3jus"],
+        }
+
+        domain_counts = {domain: 0 for domain in domain_map}
+        for post_title in recent_post_titles:
+            title_lower = post_title.lower()
+            for domain, keywords in domain_map.items():
+                if any(kw.lower() in title_lower for kw in keywords):
+                    domain_counts[domain] += 1
+                    break
+
+        # Build a rotation hint: underrepresented domains get surfaced to the LLM
+        saturated = [d for d, count in domain_counts.items() if count >= 2]
+        underrepresented = [d for d, count in domain_counts.items() if count == 0]
+        rotation_hint = ""
+        if saturated:
+            rotation_hint += f"Domains that appear clustered in recent posts (avoid if possible): {', '.join(saturated)}. "
+        if underrepresented:
+            rotation_hint += f"Domains not recently covered (prefer these): {', '.join(underrepresented)}."
+
+        relevant_posts_text = "\n".join(
+            f"  - {p['title']} (similarity: {p['similarity']})"
+            for p in relevant_past_posts
+        ) or "  (none yet)"
+
+        last_topic_block = ""
+        if state.get("last_generated_topic"):
+            last_topic_block = (
+                f"\nThe PREVIOUS agent-generated post was about: \"{state['last_generated_topic']}\". "
+                f"This topic is completely off-limits. Selecting the same topic or any semantically "
+                f"adjacent topic is a failure.\n"
+            )
+
+        system_prompt = """You are a topic selection assistant for a developer blog run by a Nigerian \
+        AI/ML and software engineer with a background in mechatronics, robotics, and embedded systems. \
+        Your job is to select a specific, non-generic blog topic that reflects what the author is \
+        actively learning or building, avoids repeating recently covered ground, and serves a general \
+        tech audience of peers, potential employers, and junior developers.
+
+        RULES:
+        1. The topic must be concrete and specific. A topic is specific enough when it could not be the \
+        title of a Wikipedia article. It must name a particular problem, trade-off, decision, failure \
+        mode, or technique — not a domain or technology. If the topic sounds like a chapter heading in \
+        a textbook, it is too broad. If it sounds like something the author discovered while actually \
+        building something, it is specific enough.
+        2. The topic must connect to the author's current learning focus or interests — do not invent \
+        topics that have no relationship to the provided context.
+        3. Prefer topics that sit at the intersection of two domains (e.g. systems thinking + AI, \
+        backend engineering + observability, Rust + ML tooling) — these produce more original content \
+        than single-domain posts.
+        4. Avoid topics where a five-minute Google search returns fifty identical blog posts. \
+        The author's angle, lived experience, or specific tech stack must be the differentiator.
+        5. DOMAIN ROTATION IS MANDATORY, NOT OPTIONAL. If the rotation guidance below marks a domain \
+        as saturated, you must not select a topic from that domain regardless of how relevant it seems. \
+        A saturated domain means the author's readers have seen enough of that recently. Choose from \
+        underrepresented domains first. If no domain is underrepresented, pick any non-saturated domain.
+        6. Respect the "avoid repetition" list. Semantically similar topics count as repetition.
+
+        Return ONLY valid JSON. No markdown fences. No preamble. No explanation.
+        Schema: {"topic": "...", "rationale": "..."}
+
+        The "rationale" must explain: (a) why this topic now given the author's current focus, \
+        (b) what makes it non-generic, and (c) which audience segment it most benefits."""
+
+        user_prompt = f"""MANDATORY DOMAIN ROTATION CONSTRAINT:
+        {rotation_hint or 'No clustering detected — all domains available.'}
+        {last_topic_block}
+        
+        Author bio: {author_context['bio']}
+
+        Active interests: {', '.join(author_context['interests'])}
+
+        Current learning focus: {author_context['learning_focus']}
+
+        Personal/lifestyle context: {author_context['lifestyle_context']}
+
+        Recent published posts (avoid these topics — semantically, not just literally):
+        {chr(10).join('  - ' + t for t in recent_post_titles) or '  (none yet)'}
+
+        Semantically similar past posts (via vector search — these topics are also off-limits):
+        {relevant_posts_text}
+
+        Domain rotation guidance: {rotation_hint or 'No strong clustering detected — pick freely.'}
+
+        Select one specific, focused topic. It should be something the author could credibly write \
+        about from direct experience or active study — not a survey of the whole field."""
 
         groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 

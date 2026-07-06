@@ -50,16 +50,40 @@ async def research_node(state: AgentState) -> dict:
             for r in raw_results
         )
 
-        system_prompt = (
-            "You are a research summarisation assistant. "
-            "Given web search results about a topic, produce a focused ~300-word "
-            "research brief that captures key facts, data, and perspectives. "
-            "Return ONLY valid JSON: {\"summary\": \"...\"} No markdown, no preamble."
-        )
-        user_prompt = (
-            f"Topic: {state['topic']}\n\n"
-            f"Search Results:\n{sources_text}"
-        )
+        system_prompt = """You are a research assistant preparing source material for a technical blog post. \
+        Your job is NOT to write the post — your job is to produce a structured research brief that gives \
+        the post author everything they need to write something accurate, current, and non-shallow.
+
+        The author values fundamentals. Do not summarise surface-level takes. Prioritise:
+        - What the current state of the art actually is (not what it was two years ago)
+        - Foundational concepts or mechanics that explain WHY something works, not just WHAT it does
+        - Real data, benchmarks, or failure cases where available
+        - Specific tools, libraries, papers, or implementations worth referencing
+        - Conflicting perspectives or trade-offs that make the topic interesting
+
+        OUTPUT FORMAT — return ONLY valid JSON, no markdown fences, no preamble:
+        {
+          "summary": "...",
+          "key_concepts": ["...", "..."],
+          "notable_sources": [{"title": "...", "url": "...", "why_relevant": "..."}],
+          "angles": ["...", "..."]
+        }
+
+        - "summary": 250-350 words. Prose. Dense with specifics. No filler.
+        - "key_concepts": 3-6 concepts the post must explain correctly to be credible.
+        - "notable_sources": up to 3 sources worth citing or linking in the post (from the search results).
+        - "angles": 2-4 specific angles or sub-questions the author could explore in the post \
+          (e.g. "why X breaks at scale", "the X vs Y trade-off most tutorials skip", \
+          "what X actually looks like in a production codebase")."""
+
+        user_prompt = f"""Topic: {state['topic']}
+
+        Web search results:
+        {sources_text}
+
+        Produce a research brief. Prioritise depth over breadth. The author writes medium-to-long form \
+        technical posts (1000-2000 words) for a technical audience — assume the reader can handle \
+        complexity. Surface what is genuinely interesting about this topic, not just what is easy to explain."""
 
         groq_client = AsyncGroq(api_key=settings.GROQ_API_KEY)
 
@@ -94,18 +118,29 @@ async def research_node(state: AgentState) -> dict:
 
         try:
             parsed = json.loads(response_text)
-            summary = parsed["summary"]
+            summary = parsed.get("summary", "")
+            key_concepts = parsed.get("key_concepts", [])
+            angles = parsed.get("angles", [])
+            notable_sources = parsed.get("notable_sources", [])
         except (json.JSONDecodeError, KeyError):
             summary = response_text
+            key_concepts = []
+            angles = []
+            notable_sources = []
 
         span.update(status_message=f"{len(raw_results)}_sources_found")
         span.end()
+
         return {
             "research_results": [
-                {"title": r.get("title", ""), "url": r.get("url", ""), "content": r.get("content", ""), "score": r.get("score", 0)}
+                {"title": r.get("title", ""), "url": r.get("url", ""),
+                 "content": r.get("content", ""), "score": r.get("score", 0)}
                 for r in raw_results
             ],
             "research_summary": summary,
+            "research_key_concepts": key_concepts,
+            "research_angles": angles,
+            "research_notable_sources": notable_sources,
         }
 
     except Exception as exc:

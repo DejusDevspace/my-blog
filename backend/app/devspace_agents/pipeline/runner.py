@@ -5,6 +5,7 @@ import logging
 import uuid
 from datetime import datetime
 
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -53,11 +54,28 @@ async def run_agent_pipeline(
         input={"owner_id": str(owner_id), "triggered_by": triggered_by},
     )
 
+    async with async_session_factory() as db:
+        last_run = await db.execute(
+            select(AgentRun)
+            .where(
+                AgentRun.owner_id == owner_id,
+                AgentRun.status == "completed",
+                AgentRun.output_post_id.isnot(None),
+            )
+            .order_by(AgentRun.started_at.desc())
+            .limit(1)
+        )
+        last_run = last_run.scalar_one_or_none()
+        last_generated_topic = None
+        if last_run and last_run.run_log:
+            last_generated_topic = last_run.run_log.get("topic")
+
     initial_state = {
         "owner_id": str(owner_id),
         "triggered_by": triggered_by,
         "langfuse_trace_id": str(run_id),
         "langfuse_root_span_id": root_span.id,
+        "last_generated_topic": last_generated_topic,
     }
 
     try:
